@@ -7,7 +7,7 @@ license = "LGPL-3.0-only"
 description = "Theory And Time Analysis Machine"
 repository = "https://gitlab.com/tatag/tatam"
 readme = "README.md"
-keywords = ["SMT", "BMC", "Temporal Logic", "solver"]
+keywords = ["SMT", "BMC", "Temporal_Logic", "solver"]
 # exclude = ["files/*"]
 include = ["**/*.rs", "**/*.lalrpop", "Cargo.toml", "Readme_crates.md"]
 
