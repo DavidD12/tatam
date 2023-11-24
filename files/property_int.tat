@@ -1,0 +1,20 @@
+interval I = -10000..10000
+var x: I
+
+init I0 {
+    x = 1
+}
+
+trans T0 {
+    (x < 1000) and (x' = x + 1)
+}
+trans T1 {
+    (x >= 1000) and (x' = 0)
+}
+
+prop = F(x < 1)
+
+// prop = F x and not F x
+
+search infinite solve
+

@@ -1,0 +1,12 @@
+var x: Bool
+
+init i { x }
+
+trans t { x != x' }
+
+prop = F(not x)
+
+// prop = F x and not F x
+
+search infinite[0..5] solve
+

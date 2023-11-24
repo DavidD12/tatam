@@ -1,0 +1,677 @@
+use std::str::FromStr;
+use crate::model::*;
+use crate::search::*;
+use crate::expr::*;
+use crate::typing::*;
+use super::*;
+use line_col::LineColLookup;
+use fraction::Fraction;
+// use std::time::Duration;
+
+grammar<'a>(lookup: &LineColLookup<'input>, parser: &mut Parser<'a>);
+
+match {
+    r"\s*" => { }, // The default whitespace skipping is disabled an `ignore pattern` is specified
+    r"//[^\n\r]*[\n\r]*" => { }, // Skip `// comments`
+    r"/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" => { },  // Skip `/* comments */`
+    _
+}
+
+//------------------------- Problem -------------------------
+
+pub Model: () = Entry* Property? Search => {};
+
+//------------------------- Entry -------------------------
+
+Entry: () = {
+    Include,
+
+    // ----- Type -----
+    Enumerate,
+    Interval,
+    // Structure,
+    // Class,
+
+    // Instance,
+
+    Declaration,
+    Definition,
+    FunDec,
+    FunDef,
+
+    Initial,
+    Invariant,
+    Transition,
+};
+
+//------------------------- Include -------------------------
+
+Include: () = "include" <file:String> => {
+    parser.add(file);
+};
+
+//------------------------- Enum -------------------------
+
+Enumerate: () = "enum" <i:Identifier> "=" "{" <elts:Identifier+> "}" => {
+    let position = Some(i.position);
+    let mut enumerate = Enumerate::new(i.name, position);
+    for e in elts {
+        let pos = Some(e.position.clone());
+        let elt = EnumerateElement::new(e.name, pos);
+        enumerate.add_element(elt);
+    }
+    parser.model.add_enumerate(enumerate);
+};
+
+//------------------------- Interval -------------------------
+
+Interval: () = "interval" <i:Identifier> "=" <min:Integer> ".." <max:Integer> => {
+    let position = Some(i.position);
+    let interval = Interval::new(i.name, position, min, max);
+    parser.model.add_interval(interval);
+};
+
+//------------------------- Declaration -------------------------
+
+Declaration: () = <constant:IsCst> <l:Identifiers> ":" <t:Type> => {
+    for i in l {
+        let position = Some(i.position.clone());
+        let x = Declaration::new(constant, i.name, t.clone(), position);
+        parser.model.add_declaration(x);
+    }
+};    
+
+//------------------------- Definition -------------------------
+
+Definition: () = "let" <i:Identifier> ":" <t:Type> "=" <e:Expr> => {
+    let position = Some(i.position);
+    let x = Definition::new(i.name, t, e, position);
+    parser.model.add_definition(x);
+};
+
+//------------------------- FunDec -------------------------
+
+FunDec: () = <constant:IsCst> <i:Identifier> "(" <p:Parameters> ")" ":" <t:Type> => {
+    let position = Some(i.position.clone());
+    let f = FunDec::new(constant, i.name, p, t, position);
+    parser.model.add_fun_dec(f);
+};
+
+//------------------------- FunDef -------------------------
+
+FunDef: () = "let" <i:Identifier> "(" <p:Parameters> ")" ":" <t:Type> "=" <e:Expr> => {
+    let position = Some(i.position.clone());
+    let f = FunDef::new(i.name, p, t, e, position);
+    parser.model.add_fun_def(f);
+};
+
+//------------------------- Initial -------------------------
+
+Initial: () = "init" <i:Identifier> "{" <e:Expr> "}" => {
+    let position = Some(i.position.clone());
+    let init = Initial::new(i.name, e, position);
+    parser.model.add_initial(init);
+};   
+
+//------------------------- Invariant -------------------------
+
+Invariant: () = "inv" <i:Identifier> "{" <e:Expr> "}" => {
+    let position = Some(i.position.clone());
+    let inv = Invariant::new(i.name, e, position);
+    parser.model.add_invariant(inv);
+};   
+
+//------------------------- Transition -------------------------
+
+Transition: () = "trans" <i:Identifier> "{" <e:Expr> "}" => {
+    let position = Some(i.position.clone());
+    let tr = Transition::new(i.name, e, position);
+    parser.model.add_transition(tr);
+};   
+
+//------------------------- Property -------------------------
+
+Property: () = "prop" "=" <e:Expr> => {
+    parser.model.set_property(e);
+}; 
+
+//------------------------- Search -------------------------
+
+Search: () = "search" <tn:TransitionNumber?> <pt:PathType> <st:SearchType> => {
+    let tn = match tn {
+        Some(tn) => tn,
+        None => TransitionNumber::new(0, None),
+    };
+    let search = Search::new(tn, pt, st);
+    parser.model.set_search(search);
+};
+
+PathType: PathType = {
+    "initial" => PathType::Initial,
+    "infinite" <c:("+""complete")?> => 
+    {
+        PathType::Path{infinite: true, truncated: false, finite: false, complete: c.is_some()}
+    },
+    "truncated" <c:("+""complete")?> => 
+    {
+        PathType::Path{infinite: false, truncated: true, finite: false, complete: c.is_some()}
+    },
+    "finite" <c:("+""complete")?> => 
+    {
+        PathType::Path{infinite: false, truncated: false, finite: true, complete: c.is_some()}
+    },
+    "infinite" "+" "truncated" <c:("+""complete")?> => 
+    {
+        PathType::Path{infinite: true, truncated: true, finite: false, complete: c.is_some()}
+    },
+    "truncated" "+" "infinite" <c:("+""complete")?> => 
+    {
+        PathType::Path{infinite: true, truncated: true, finite: false, complete: c.is_some()}
+    },
+    "infinite" "+" "finite" <c:("+""complete")?> => 
+    {
+        PathType::Path{infinite: true, truncated: false, finite: true, complete: c.is_some()}
+    },
+    "finite" "+" "infinite" <c:("+""complete")?> => 
+    {
+        PathType::Path{infinite: true, truncated: false, finite: true, complete: c.is_some()}
+    },
+};
+
+SearchType: SearchType = {
+    "solve" => SearchType::Solve,
+    "minimize" <o: Expr> "until" <b: Expr> => SearchType::Optimize{ minimize: true, objective: o, bound: b },
+    "maximize" <o: Expr> "until" <b: Expr> => SearchType::Optimize{ minimize: false, objective: o, bound: b },
+};
+
+TransitionNumber: TransitionNumber = "[" <min:Integer> ".." <max:Integer?> "]" => {
+    let min = min.max(0) as usize;
+    let max = {
+        if let Some(max) = max {
+            Some(max.max(min as i64) as usize)
+        }
+        else {
+            None
+        }
+    };
+    TransitionNumber::new(min, max)
+};
+
+//------------------------- Structure -------------------------
+
+// Structure: () = "struct" <i:Identifier> "{" <elts:StructureElement*> "}" => {
+//     let position = Some(i.position.clone());
+//     let mut structure = Structure::new(i.name, position);
+//     for e in elts.iter() {
+//         match e {
+//             StructureElement::Attribute(a) => {
+//                 structure.add_attribute(a.clone());
+//             },
+//             StructureElement::Method(m) => {
+//                 structure.add_method(m.clone());
+//             }
+//         }
+//     }
+//     parser.problem.add_structure(structure);
+// };
+
+// StructureElement: StructureElement = {
+//     <a:StrucAttribute> => StructureElement::Attribute(a),
+//     <m:StrucMethod> => StructureElement::Method(m),
+// };
+
+//------------------------- Strcuture Attribute -------------------------
+
+// StrucAttribute: Attribute<StructureId> = <i:Identifier> ":" <t:Type> <e:Assign?> => {
+//     let position = Some(i.position.clone());
+//     Attribute::new(i.name, t, e, position)
+// };
+
+//------------------------- Structure Method -------------------------
+
+// StrucMethod: Method<StructureId> = <i:Identifier> "(" <p:Parameters> ")" ":" <t:Type> <e:Assign?> => {
+//     let position = Some(i.position.clone());
+//     let mut m = Method::new(i.name, t, e, position);
+//     for x in p {
+//         m.add_parameter(x);
+//     }
+//     m
+// };   
+
+//------------------------- Class -------------------------
+
+// Class: () = "class" <i:Identifier> <e:Extends?> "{" <elts:ClassElement*> "}" => {
+//     let position = Some(i.position.clone());
+//     let mut class = Class::new(i.name, e, position);
+//     for e in elts.iter() {
+//         match e {
+//             ClassElement::Attribute(a) => {
+//                 class.add_attribute(a.clone());
+//             },
+//             ClassElement::Method(m) => {
+//                 class.add_method(m.clone());
+//             }
+//         }
+//     }
+//     parser.problem.add_class(class);
+// };
+
+// Extends: Type = "extends" <t:Type> => t;
+
+// ClassElement: ClassElement = {
+//     <a:ClassAttribute> => ClassElement::Attribute(a),
+//     <m:ClassMethod> => ClassElement::Method(m),
+// };
+
+//------------------------- Class Attribute -------------------------
+
+// ClassAttribute: Attribute<ClassId> = <i:Identifier> ":" <t:Type> <e:Assign?> => {
+//     let position = Some(i.position.clone());
+//     Attribute::new(i.name, t, e, position)
+// };
+
+//------------------------- Class Method -------------------------
+
+// ClassMethod: Method<ClassId> = <i:Identifier> "(" <p:Parameters> ")" ":" <t:Type> <e:Assign?> => {
+//     let position = Some(i.position.clone());
+//     let mut m = Method::new(i.name, t, e, position);
+//     for x in p {
+//         m.add_parameter(x);
+//     }
+//     m
+// };   
+
+//------------------------- Instance -------------------------
+
+// Instance: () = "inst" <l:Identifiers> ":" <t:Type> => {
+//     for i in l {
+//         let position = Some(i.position.clone());
+//         let inst = Instance::new(i.name, t.clone(), position);
+//         parser.problem.add_instance(inst);
+//     }
+// }; 
+
+//------------------------- Cst Var -------------------------
+
+IsCst: bool = {
+    "cst" => true,
+    "var" => false,
+};
+
+//------------------------- Parameter -------------------------
+
+ParameterList: Vec<Parameter> = <i:Identifier> <l:CommaIdentifier*> ":" <t:Type> => {
+    let position = Some(i.position.clone());
+    let mut v = Vec::new();
+    v.push(Parameter::new(i.name, t.clone(), position));
+    for x in l.iter() {
+        let parameter = Parameter::new(x.name.clone(), t.clone(), Some(x.position.clone()));
+        v.push(parameter);
+    }
+    v
+};
+
+Parameters: Vec<Parameter> = <p:ParameterList> <l:ParameterNext*> => {
+    let mut parameters = Vec::new();
+    parameters.extend(p);
+    for x in l.iter() {
+        parameters.extend(x.clone());
+    }
+    parameters
+};
+
+ParameterNext: Vec<Parameter> = "," <p:ParameterList> => p;
+
+//------------------------- Assign -------------------------
+
+// Assign: Expr = "=" <e:Expr> => e;
+
+//========================= Type =========================
+
+Type: Type = {
+    "Bool" => Type::Bool,
+    "Int"  => Type::Int,
+    "Real" => Type::Real,
+    <i:Identifier> => Type::Unresolved(i.name, Some(i.position)),
+};
+
+//========================= Expr =========================
+
+Expr:Expr = ImpliesExpr;
+
+ImpliesExpr: Expr = {
+    <left:ImpliesExpr> <l:@L>"implies" <right:OrExpr> => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let expression = Expression::Binary(Box::new(left), BinaryOperator::Implies, Box::new(right));
+        Expr::new(expression, position)
+    },
+    OrExpr,
+};
+
+// AndExpr: Expr = {
+//     <left:AndExpr> <l:@L><op:AndOp> <right:CompExpr> => {
+//         let position = Some(Position::new(parser.file(), lookup, l));
+//         let expression = Expression::Binary(Box::new(left), op, Box::new(right));
+//         Expr::new(expression, position)
+//     },
+//     CompExpr,
+// };
+OrExpr: Expr = {
+    <l:@L><e:AndExpr> <v: ("or" <AndExpr>)+> => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let mut kids = vec![e];
+        kids.extend(v);
+        let expression = Expression::Nary(NaryOperator::Or, kids);
+        Expr::new(expression, position)
+    },
+    AndExpr,
+};
+
+AndExpr: Expr = {
+    <l:@L><e:CompExpr> <v: ("and" <CompExpr>)+> => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let mut kids = vec![e];
+        kids.extend(v);
+        let expression = Expression::Nary(NaryOperator::And, kids);
+        Expr::new(expression, position)
+    },
+    CompExpr,
+};
+
+CompExpr: Expr = {
+    <left:CompExpr> <l:@L><op:CompOp> <right:AddSubExpr> => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let expression = Expression::Binary(Box::new(left), op, Box::new(right));
+        Expr::new(expression, position)
+    },
+    AddSubExpr,
+};
+
+AddSubExpr: Expr = {
+    <left:AddSubExpr> <l:@L>"+" <right:MulExpr> => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let kids = vec![left, right];
+        let expression = Expression::Nary(NaryOperator::Add, kids);
+        Expr::new(expression, position)
+    },
+    <left:AddSubExpr> <l:@L>"-" <right:MulExpr> => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let kids = vec![left, right];
+        let expression = Expression::Nary(NaryOperator::Sub, kids);
+        Expr::new(expression, position)
+    },
+    // <l:@L><first:MulExpr> "+" <second:MulExpr> <others: ("+" <MulExpr>)+> => {
+    //     let position = Some(Position::new(parser.file(), lookup, l));
+    //     let mut kids = vec![first, second];
+    //     kids.extend(others);
+    //     let expression = Expression::Nary(NaryOperator::Add, kids);
+    //     Expr::new(expression, position)
+    // },
+    // <l:@L><e:MulExpr> <v: ("+" <MulExpr>)+> => {
+    //     let position = Some(Position::new(parser.file(), lookup, l));
+    //     let mut kids = vec![e];
+    //     kids.extend(v);
+    //     let expression = Expression::Nary(NaryOperator::Add, kids);
+    //     Expr::new(expression, position)
+    // },
+    // <l:@L><e:AddSubExpr> <v: ("-" <MulExpr>)+> => {
+    //     let position = Some(Position::new(parser.file(), lookup, l));
+    //     let mut kids = vec![e];
+    //     kids.extend(v);
+    //     let expression = Expression::Nary(NaryOperator::Sub, kids);
+    //     Expr::new(expression, position)
+    // },
+    MulExpr,
+};
+
+MulExpr: Expr = {
+    <l:@L><e:PrefixUnaryExpr> <v: ("*" <PrefixUnaryExpr>)+> => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let mut kids = vec![e];
+        kids.extend(v);
+        let expression = Expression::Nary(NaryOperator::Mul, kids);
+        Expr::new(expression, position)
+    },
+    PrefixUnaryExpr,
+};
+
+PrefixUnaryExpr: Expr = {
+    <l:@L><op:PrefixUnaryOperator> <e: PrefixUnaryExpr> => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let expression = Expression::PrefixUnary(op, Box::new(e));
+        Expr::new(expression, position)
+    },
+    IfThenElseExpr,
+};
+
+// OuExpr: Expr = NaryOpExpr<"ou", BinaryOperator::Or, EtExpr>;
+// EtExpr: Expr = NaryOpExpr<"et", BinaryOperator::And, FollowingExpr>;
+
+// NaryOpExpr<Op, o, N>: Expr = {
+//     <l:@L><e:N> <v: (Op <N>)+> => {
+//         let position = Some(Position::new(parser.file(), lookup, l));
+//         let left = e;
+//         let right = v[0].clone();
+//         let expression = Expression::Binary(Box::new(left), o, Box::new(right));
+//         Expr::new(expression, position)
+//     },
+//     N,
+// };
+
+// EtOp: BinaryOperator = {
+//     "et" => BinaryOperator::And
+// };
+// OuOp: BinaryOperator = {
+//     "ou" => BinaryOperator::Or
+// };
+
+
+// NaryExpr: Expr = {
+//     <l:@L><op:NaryOp> <v: TupleExpr> => {
+//         let position = Some(Position::new(parser.file(), lookup, l));
+//         Expr::Nary(op, v, position)
+//     },
+//     FunCallExpr,
+// };
+
+// StructExpr: Expr = {
+//     <e:StructExpr> "." <i:Identifier> <p:TupleExpr> => {
+//         let position = Some(i.position);
+//         Expr::UnresolvedMethCall(Box::new(e), i.name, p, position)
+//     },
+//     <e:StructExpr> "." <i:Identifier> => {
+//         let position = Some(i.position);
+//         Expr::UnresolvedAttribute(Box::new(e), i.name, position)
+//     },
+//     AsExpr,
+// };
+
+// AsExpr: Expr = {
+//     <e:AsExpr> <l:@L>"as" <min:Integer> ".." <max:Integer> => {
+//         let position = Position::new(parser.file(), lookup, l);
+//         Expr::AsInterval(Box::new(e), min as isize, max as isize, Some(position))
+//     },
+//     <e:AsExpr> <l:@L>"as" "Int" => {
+//         let position = Position::new(parser.file(), lookup, l);
+//         Expr::AsInt(Box::new(e), Some(position))
+//     },
+//     <e:AsExpr> <l:@L>"as" "Real" => {
+//         let position = Position::new(parser.file(), lookup, l);
+//         Expr::AsReal(Box::new(e), Some(position))
+//     },
+//     IfThenElseExpr,
+// };
+
+IfThenElseExpr: Expr = {
+    <l:@L>"if" <c:Expr> "then" <t:Expr> <v:ElifExpr*> "else" <e:Expr> "end" => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let c = Box::new(c);
+        let t = Box::new(t);
+        let e = Box::new(e);
+        let expression = Expression::IfThenElse(c, t, v, e);
+        Expr::new(expression, position)
+    },
+    QuantifierExpr
+};
+ElifExpr: (Expr, Expr) = "elif" <x:Expr> "then" <y:Expr> => (x, y);
+
+QuantifierExpr: Expr = {
+    <l:@L><op:QtOperator><p:Parameters> "|" <e:Expr> "end" => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let expression = op.new(p, e);
+        Expr::new(expression, position)
+    },
+    PrefixLTL
+};
+
+// LTL
+PrefixLTL: Expr = {
+    <l:@L><op:LTLUnaryOp> <e: PrefixLTL> => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let expression = op.new(e);
+        Expr::new(expression, position)
+    },
+    BinaryLTL,
+};
+
+BinaryLTL: Expr = {
+    <left:BinaryLTL> <l:@L><op:LTLBinaryOp> <right:AsExp> => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let expression = op.new(left, right);
+        Expr::new(expression, position)
+    },
+    AsExp,
+};
+
+AsExp: Expr = {
+    <kid: FollowingExpr> <l:@L>"as" <typ:Type> "default" <default:FollowingExpr> => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let expression = Expression::As(Box::new(kid), typ, Box::new(default));
+        Expr::new(expression, position)
+    },
+    FollowingExpr,
+};
+
+FollowingExpr: Expr = {
+    <e:ApplyExpr><l:@L>"'" => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let expression = Expression::Following(Box::new(e));
+        Expr::new(expression, position)
+    },
+    ApplyExpr,
+};
+
+ApplyExpr: Expr = {
+    <e:Term> <l:@L> <p:TupleExpr> => {
+        let position = Position::new(parser.file(), lookup, l);
+        let expression = Expression::Apply(Box::new(e), p);
+        Expr::new(expression, Some(position))
+    },
+    Term,
+};
+
+Term: Expr = {
+    <l:@L><b:Boolean> => {
+        let position = Position::new(parser.file(), lookup, l);
+        Expr::from((b, position))
+    },
+    <l:@L><i:Integer> => {
+        let position = Position::new(parser.file(), lookup, l);
+        Expr::from((i, position))
+    },
+    <l:@L><d:Decimal> => {
+        let position = Position::new(parser.file(), lookup, l);
+        Expr::from((d, position))
+    },
+    <x:Identifier> => Expr::new_unresolved(x.name, Some(x.position)),
+    "(" <Expr> ")",
+};
+
+TupleExpr: Vec<Expr> = "(" <e:Expr> <l:CommaExpr*> ")" => {
+    let mut v = Vec::new();
+    v.push(e);
+    v.extend(l);
+    v
+};
+CommaExpr: Expr = "," <e:Expr> => e;
+
+//------------------------- Operator -------------------------
+
+CompOp: BinaryOperator = {
+    "=" => BinaryOperator::Eq,
+    "!=" => BinaryOperator::Ne,
+    "<" => BinaryOperator::Lt,
+    "<=" => BinaryOperator::Le,
+    ">=" => BinaryOperator::Ge,
+    ">" => BinaryOperator::Gt,
+};
+
+PrefixUnaryOperator: PrefixUnaryOperator = {
+    "not" => PrefixUnaryOperator::Not,
+    "-" => PrefixUnaryOperator::Neg,
+};
+
+LTLUnaryOp: LTLUnaryOperator = {
+    "X" => LTLUnaryOperator::X,
+    "G" => LTLUnaryOperator::G,
+    "F" => LTLUnaryOperator::F,
+};
+
+LTLBinaryOp: LTLBinaryOperator = {
+    "U" => LTLBinaryOperator::U,
+    "R" => LTLBinaryOperator::R,
+};
+
+QtOperator: QtOperator = {
+    "forall" => QtOperator::Forall,
+    "exists" => QtOperator::Exists,
+    "sum" => QtOperator::Sum,
+    "prod" => QtOperator::Prod,
+    "min" => QtOperator::Min,
+    "max" => QtOperator::Max,
+};
+
+// NaryOp: NaryOp = {
+//     "min" => NaryOp::Min,
+//     "max" => NaryOp::Max,
+// };
+
+//========================= Util =========================
+
+CommaOne<T>: Vec<T> = {
+    <mut v:(<T> ",")*> <e:T> => {
+        v.push(e);
+        v
+    }
+};
+
+CommaIdentifier: Identifier = "," <i:Identifier> => i;
+
+Identifiers: Vec<Identifier> = <i:Identifier> <l:CommaIdentifier*> => {
+    let mut v = Vec::new();
+    v.push(i);
+    v.extend(l);
+    v
+};
+
+//========================= Lexer =========================
+
+String: String = <s:r#"".+""#> => s[1..s.len()-1].to_string();
+
+// Duration: Duration = {
+//     <i:UInteger> "sec" => Duration::from_secs(i),
+//     <i:UInteger> "ms" => Duration::from_millis(i),
+// };
+
+Boolean: bool = {
+    "false" => false,
+    "true" => true,
+};
+
+Integer: i64 = <i:r"-?[0-9]+"> => i.parse::<i64>().unwrap();
+
+Decimal: Fraction = <d:r"[0-9]+\.[0-9]+"> => Fraction::from_str(d).unwrap();
+
+Identifier: Identifier = <l:@L> <s:r"[a-zA-Z][a-zA-Z_0-9]*"> <r:@R> => {
+    Identifier::new(parser.file(), lookup, s, l)
+};

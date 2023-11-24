@@ -1,0 +1,11 @@
+var x: Bool
+
+init i {
+    x
+}
+
+trans t {
+    x != x'
+}
+
+search truncated[2..10] solve

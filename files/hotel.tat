@@ -1,0 +1,114 @@
+interval KeyId = 1..10
+interval RoomId = 1..10
+interval GuestId = 1..10
+
+// -------------------- Room --------------------
+cst room_first_key(room: RoomId): KeyId
+cst room_last_key(room: RoomId): KeyId
+let room_next_key(room: RoomId): KeyId = 
+    if room_current_key(room) = room_last_key(room) then 
+        room_first_key(room) 
+    else 
+        (room_current_key(room) + 1) as KeyId default 1
+    end
+var room_current_key(room: RoomId): KeyId
+
+init room_def {
+    // Al Least 2 keys ?
+    forall room: RoomId | room_last_key(room) > room_first_key(room) end
+    and
+    // Pas de partage de clef
+    forall r1, r2: RoomId | (r1 != r2) implies (
+            room_last_key(r1) < room_first_key(r2) or
+            room_last_key(r2) < room_first_key(r1)
+        )
+    end
+}
+init room_init_key {
+    forall room: RoomId | room_current_key(room) = room_first_key(room) end
+}
+
+// -------------------- FromDesk --------------------
+var occupant(guest: GuestId, room: RoomId): Bool
+var last_key(room: RoomId): KeyId
+
+init init_front_desk {
+    forall guest: GuestId, room: RoomId |  not occupant(guest, room) end
+    and
+    forall room: RoomId | last_key(room) = room_current_key(room) end
+}
+
+// -------------------- Guest --------------------
+var guest_keys(guest: GuestId, key: KeyId): Bool
+
+init init_guest {
+    forall guest: GuestId, key: KeyId | not guest_keys(guest, key) end
+}
+
+// -------------------- Checkin --------------------
+trans check_in {
+    exists guest: GuestId, room: RoomId |
+        // Room available
+        not exists other: GuestId | occupant(other, room) end
+        and
+        // occupant
+        occupant(guest, room)' and 
+        forall g: GuestId, r: RoomId | 
+            (guest != g or r != room) implies occupant(g, r)' = occupant(g, r) 
+        end
+        and
+        // last_key
+        last_key(room)' = room_current_key(room) and
+        forall r: RoomId | (room != r) implies last_key(r)' = last_key(r) end
+        // current_key
+        and 
+        room_current_key(room)' = room_next_key(room) and
+        forall r: RoomId | (r != room) implies room_current_key(r)' = room_current_key(r) end
+        and
+        // guest_key
+        guest_keys(guest, room_current_key(room))
+        and
+        forall g: GuestId, r: RoomId | (g != guest or r != room) implies guest_keys(g, r)' = guest_keys(g, r) end
+    end
+}
+
+// -------------------- Checkout --------------------
+trans check_out {
+    exists guest: GuestId, room: RoomId |
+        occupant(guest, room)
+        and
+        forall g: GuestId, r: RoomId | 
+            occupant(g, r)' = 
+                if g = guest and r = room then
+                    false
+                else
+                    occupant(g, r)
+                end
+        end
+        and forall r: RoomId | room_current_key(r)' = room_current_key(r) end
+        and forall r: RoomId | last_key(r)' = last_key(r) end
+        and forall g: GuestId, k: KeyId | guest_keys(g, k)' = guest_keys(g, k) end
+        // [occupant(guest, room)] (
+        //     not occupant(guest, room)'
+        //     // and
+        //     // forall g: GuestId, r: RoomId | (g != guest or r != RoomId) implies occupant(g, r)' = occupant(g, r)
+        //     // end
+        // )
+    end
+}
+
+// -------------------- Entry --------------------
+trans entry {
+    exists guest: GuestId, room: RoomId | 
+        guest_keys(guest, room_current_key(room))
+        and 
+        forall r: RoomId |
+            room_current_key(r)' = if r = room then room_next_key(r) else room_current_key(r) end
+        end
+        and forall g: GuestId, r: RoomId | occupant(g, r)' = occupant(g, r) end
+        and forall r: RoomId | last_key(r)' = last_key(r) end
+        and forall g: GuestId, k: KeyId | guest_keys(g, k)' = guest_keys(g, k) end
+    end
+}
+
+search initial solve

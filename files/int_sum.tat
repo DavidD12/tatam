@@ -1,0 +1,76 @@
+// interval I = 0..1000
+// interval J = 1..1000
+
+var step: Int
+var inc: Int
+var sum: Int
+
+inv i0 {
+    inc > 0
+}
+
+init init_0 {
+    step = 0 and sum = 0
+}
+
+// trans t_inc {
+//     step' = step + 1 and
+//     sum < 1000 and sum' = sum + inc
+// }
+
+// trans t_reset {
+//     step' = 0 and
+//     sum >= 1000 and sum' = 0
+// }
+
+// trans t {
+//     if sum < 1000 then 
+//         step' = step + 1 and
+//         sum' = sum + inc
+//     else
+//         step' = 0 and
+//         sum' = 0
+//     end
+// }
+
+trans t {
+    step' = if sum < 1000 then step + 1 else 0 end 
+    and
+    sum' = if sum < 1000 then sum + inc else 0 end
+}
+
+
+prop = G F (sum = 1000 and step = 200)
+
+search[150..150] truncated + complete solve
+
+// t_inc + t_reset + prop
+// truncated[50..50]
+// 0m1,578s
+
+// t_inc + t_reset
+// truncated[50..50]
+// 0m16,815s
+
+// t_inc + t_reset + prop
+// infinite[50..50]
+// 0m1,579s
+
+// t_inc + t_reset
+// infinite[50..50]
+// 0m17,423s
+
+// t_inc + t_reset + prop
+// infinite[0..50]
+// 0m37,334s
+
+// ite + prop
+// infinite[0..50]
+// 0m29,014s
+
+
+// ite
+// infinite[50..50]
+// 0m12,742s
+
+

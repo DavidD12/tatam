@@ -1,0 +1,11 @@
+
+cst f(i: Int): Bool
+
+// init I {
+//     f(0)
+// }
+
+
+
+// search infinite + complete solve
+search finite solve

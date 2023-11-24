@@ -1,0 +1,55 @@
+//----- Types -----
+
+enum E = { e1 e2 }
+enum Color = { Red Blue }
+
+interval I = 1..10
+interval J = -1..11
+
+//----- -----
+
+cst x: Int
+// cst a, b, c, d: Bool
+
+cst e: E
+// var i, j, k, l, m: I
+
+let y: I = 7
+let ee: E = e1
+
+fsd
+
+// let bb: Bool = not a
+
+cst f(i, j: Int): Bool
+var g(i, j: I): E
+
+let h(i: Int, e: E): Bool = e = e1
+
+//----- -----
+
+inv toto {
+    f(1, y)
+}
+
+inv titi {
+    not (x = 20)
+}
+
+//----- -----
+
+init initial_test {
+    /*
+    (i * j * k) = -10 // TODO: propagate false !!!
+    (i + j - k - l + m) = 10
+    (i + j + k + l + m) = 10
+    */
+   true
+}
+
+trans T {
+    not (y = y + y') and (x' = 10) and f(y', 10)
+}
+
+
+search initial solve

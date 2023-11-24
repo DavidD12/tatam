@@ -1,0 +1,44 @@
+[package]
+name = "tatam"
+version = "0.1.0"
+edition = "2021"
+authors = ["David Doose <David.Doose@gmail.com>"]
+license = "LGPL-3.0-only"
+description = "Theory And Time Analysis Machine"
+repository = "https://gitlab.com/tatag/tatam"
+readme = "README.md"
+keywords = ["SMT", "BMC", "Temporal Logic", "solver"]
+# exclude = ["files/*"]
+include = ["**/*.rs", "**/*.lalrpop", "Cargo.toml", "Readme_crates.md"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+lalrpop-util = { version = "0.19.8", features = ["lexer"] }
+regex = "1.6.0"
+line-col = "0.2.1"
+# z3 = "0.11.2"
+clap = { version = "4.0.18", features = ["derive"] }
+fraction = "0.13.0"
+d-stu = "0.1.5"
+termion = "2.0.1"
+
+[build-dependencies]
+lalrpop = { version = "0.19.8", features = ["lexer"] }
+
+
+[lib]
+name = "tatam"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tatam"
+path = "bin/main.rs"
+
+# [[bin]]
+# name = "z3_test"
+# path = "bin/z3_test.rs"
+
+# [[bin]]
+# name = "smt_test"
+# path = "bin/smt_test.rs"

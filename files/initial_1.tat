@@ -1,0 +1,20 @@
+enum E = {a b c}
+cst x, y, z: Bool
+cst i: Int
+cst r: Real
+cst e: E
+
+var vx: Bool
+var vi: Int
+var vr: Real
+var ve: E
+
+init initial_consttraint {
+    x and y
+}
+
+inv invariant_constraint {
+    (x or z) and vx and (vi >= 0 or vi <= 0)
+}
+
+search initial solve

@@ -1,0 +1,46 @@
+var x: Bool
+cst i: Int
+
+init init_x {
+    x
+}
+
+trans transition_x {
+    x
+}
+
+// prop = F G (not x)
+// prop = F (not (X true))
+
+// prop = F ( (not x) and (not (X true)) )
+// prop = F ( (not x) and (X true) )
+// prop = F ( x and (not (X true)) )
+
+// --------------------------------------------------
+// prop = F (not x)
+// I: false
+// T: true (k = 1)
+// F: true (k = 1)
+
+// prop = F (x and (X true))
+// I: true (k = 1)
+// T: true (k = 1) with partial state 1 ?
+// F: true (k = )
+
+// prop = F (x and not (X true))
+// I: false
+// T: true (k = 0)
+// F: false (k = 2)
+
+// prop = F ((not x) and (X true))
+// I: false
+// T: false
+// F: false
+
+// prop = F ((not x) and not (X true))
+// I: false
+// T: true (k = 1)
+// F: true (k = 1)
+// --------------------------------------------------
+
+search truncated + complete solve

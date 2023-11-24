@@ -1,0 +1,11 @@
+var x: Bool
+
+init i {
+    x
+}
+
+trans t {
+    x != x'
+}
+
+search infinite[0..2] solve

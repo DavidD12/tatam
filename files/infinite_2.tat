@@ -1,0 +1,15 @@
+var i: Int
+
+init initial_cst {
+    i = 0
+}
+
+trans t1 {
+    i < 2 and i' = i+1
+}
+
+trans t2 {
+    i >= 2 and i' = 1
+}
+
+search infinite[0..5] solve
