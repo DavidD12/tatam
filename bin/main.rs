@@ -5,6 +5,12 @@ fn main() {
     let mut pretty = d_stuff::Pretty::new();
 
     let args: Args = Args::parse();
+    // // vscode install
+    // if let Some(_folder) = &args.vscode_extension {
+    //     // copy_directory("~/.cargo", dest)
+    //     // TODO
+    // }
+
     //
     let mut model = Model::empty();
 

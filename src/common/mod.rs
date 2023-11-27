@@ -4,6 +4,9 @@ use crate::parser::Position;
 use crate::typing::Type;
 use std::collections::HashMap;
 
+pub mod file;
+pub use file::*;
+
 //------------------------- Id -------------------------
 
 pub trait Id: Clone + Copy + PartialEq + Eq + core::hash::Hash + std::fmt::Debug {

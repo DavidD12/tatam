@@ -18,6 +18,7 @@ use clap::Parser;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
+#[command(name = "tatam", about = "Transition And Theory Analysis Machine")]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
     /// input file
@@ -32,6 +33,9 @@ pub struct Args {
     /// Incremental solver
     #[arg(short, long, default_value_t = false)]
     pub incremental: bool,
+    // /// install vscode extensions in the destination folder
+    // #[arg(long = "vs")]
+    // pub vscode_extension: Option<String>,
     /// SMT Log Folder
     #[arg(short, long)]
     log_folder: Option<String>,

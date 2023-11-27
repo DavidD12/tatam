@@ -3,6 +3,7 @@ use crate::common::*;
 use crate::expr::*;
 use crate::model::*;
 use crate::typing::*;
+use smt_sb::*;
 
 pub struct Solver<'a> {
     model: &'a Model,

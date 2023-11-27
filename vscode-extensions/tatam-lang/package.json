@@ -1,0 +1,25 @@
+{
+  "name": "tatam-lang",
+  "displayName": "Tatam Lang",
+  "description": "Tatam Language",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.77.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "tatam",
+      "aliases": ["Tatam", "tatam"],
+      "extensions": [".tat"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "tatam",
+      "scopeName": "source.tatam",
+      "path": "./syntaxes/tatam.tmLanguage.json"
+    }]
+  }
+}

@@ -1,17 +1,20 @@
 [package]
 name = "tatam"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["David Doose <David.Doose@gmail.com>"]
 license = "LGPL-3.0-only"
 description = "Theory And Time Analysis Machine"
-repository = "https://gitlab.com/tatag/tatam"
+repository = "https://github.com/DavidD12/tatam"
 readme = "README.md"
 keywords = ["SMT", "BMC", "Temporal_Logic", "solver"]
 # exclude = ["files/*"]
 include = ["**/*.rs", "**/*.lalrpop", "Cargo.toml", "Readme_crates.md"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[package.metadata.tatam]
+directories = ["vscode-extensions"]
 
 [dependencies]
 lalrpop-util = { version = "0.19.8", features = ["lexer"] }
@@ -22,6 +25,7 @@ clap = { version = "4.0.18", features = ["derive"] }
 fraction = "0.13.0"
 d-stu = "0.1.5"
 termion = "2.0.1"
+smt_sb-rs = "0.1.0"
 
 [build-dependencies]
 lalrpop = { version = "0.19.8", features = ["lexer"] }

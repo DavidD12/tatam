@@ -1,5 +1,4 @@
 var x: Bool
-cst i: Int
 
 init init_x {
     x
