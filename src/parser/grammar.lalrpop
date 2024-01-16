@@ -330,6 +330,7 @@ ParameterNext: Vec<Parameter> = "," <p:ParameterList> => p;
 Type: Type = {
     "Bool" => Type::Bool,
     "Int"  => Type::Int,
+    <min:Integer> ".." <max:Integer> => Type::IntInterval(min, max),
     "Real" => Type::Real,
     <i:Identifier> => Type::Unresolved(i.name, Some(i.position)),
 };

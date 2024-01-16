@@ -53,10 +53,10 @@ impl<'a> Solver<'a> {
             Type::Int => "Int".to_string(),
             Type::Real => "Real".to_string(),
             Type::IntInterval(_, _) => "Int".to_string(),
+            Type::Interval(_) => "Int".to_string(),
 
             Type::Enumerate(id) => self.model.get(*id).unwrap().name().to_string(),
 
-            Type::Interval(_) => panic!(),
             Type::Undefined => panic!(),
             Type::Unresolved(_, _) => panic!(),
             Type::Function(_, _) => panic!(),

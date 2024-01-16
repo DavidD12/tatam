@@ -1,0 +1,20 @@
+interval Inter = 0..1000
+
+cst i: Inter
+var j: 0..1000
+
+init I {
+    i >= 0 and 
+    j >= 0 and 
+    j < i
+}
+
+trans T {
+    j' = j + i
+}
+
+prop = F(j = 4 * i)
+
+search[0..10] truncated solve
+
+
