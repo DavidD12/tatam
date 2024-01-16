@@ -17,8 +17,6 @@ cst e: E
 let y: I = 7
 let ee: E = e1
 
-fsd
-
 // let bb: Bool = not a
 
 cst f(i, j: Int): Bool

@@ -1,4 +1,5 @@
 use fraction::Fraction;
+use fraction::One;
 use fraction::Zero;
 
 use super::*;
@@ -385,10 +386,10 @@ impl Expr {
                     self.clone()
                 }
                 NaryOperator::Mul => {
-                    let mut int_value = 0;
+                    let mut int_value = 1;
                     let mut has_int = false;
                     let mut has_real = false;
-                    let mut real_value = Fraction::zero();
+                    let mut real_value = Fraction::one();
                     let mut v = Vec::new();
                     for e in kids.iter() {
                         let kid = e.propagate(model);
@@ -410,10 +411,10 @@ impl Expr {
                     if v.is_empty() && has_real {
                         return real_value.into();
                     }
-                    if int_value != 0 {
+                    if int_value != 1 {
                         v.push(int_value.into());
                     }
-                    if real_value != Fraction::zero() {
+                    if real_value != Fraction::one() {
                         v.push(real_value.into());
                     }
                     Expr::mul(v)
@@ -473,6 +474,12 @@ impl Expr {
             Expression::State(kid, state) => {
                 let kid = kid.propagate(model);
                 let expression = Expression::State(Box::new(kid), *state);
+                Expr::new(expression, self.position().clone())
+            }
+            Expression::Scope(l, e) => {
+                let l = l.iter().map(|e| e.propagate(model)).collect::<Vec<_>>();
+                let e = e.propagate(model);
+                let expression = Expression::Scope(l, Box::new(e));
                 Expr::new(expression, self.position().clone())
             }
             //

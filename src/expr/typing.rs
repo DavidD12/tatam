@@ -119,6 +119,7 @@ impl Expression {
             //
             Expression::Following(kid) => kid.get_type(model),
             Expression::State(kid, _) => kid.get_type(model),
+            Expression::Scope(_, e) => e.get_type(model),
             //
             Expression::IfThenElse(_, te, list, ee) => {
                 let mut res = te.get_type(model);
@@ -264,6 +265,7 @@ impl Expr {
             //
             Expression::Following(kid) => kid.check_type(model),
             Expression::State(kid, _) => kid.check_type(model),
+            Expression::Scope(_, e) => e.check_is_bool(model),
             //
             Expression::IfThenElse(ce, te, list, ee) => {
                 ce.check_type(model)?;

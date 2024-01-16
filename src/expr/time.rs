@@ -82,6 +82,12 @@ impl Expr {
                     expr,
                 })
             }
+            Expression::Scope(l, e) => {
+                for p in l.iter() {
+                    p.check_time(model)?;
+                }
+                e.check_time(model)
+            }
             //
             Expression::IfThenElse(ce, te, list, ee) => {
                 ce.check_time(model)?;
@@ -163,6 +169,7 @@ impl Expr {
             //
             Expression::Following(_) => Some(self),
             Expression::State(kid, _) => kid.get_following(),
+            Expression::Scope(_, e) => e.get_following(),
             //
             Expression::IfThenElse(ce, te, list, ee) => ce
                 .get_following()
@@ -210,6 +217,7 @@ impl Expr {
             Expression::As(kid, _, default) => kid.get_ltl().or(default.get_ltl()),
             Expression::Following(e) => e.get_ltl(),
             Expression::State(e, _) => e.get_ltl(),
+            Expression::Scope(_, e) => e.get_ltl(),
             Expression::IfThenElse(ce, te, list, ee) => ce
                 .get_ltl()
                 .or(te.get_ltl())

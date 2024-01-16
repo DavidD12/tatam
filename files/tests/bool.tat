@@ -1,0 +1,15 @@
+cst x: Bool
+var y, z: Bool
+
+init intial_conditions {
+    y != z
+}
+
+trans T {
+    x and (y' != y) and (y' != z')
+}
+
+prop = F(y)
+
+search infinite + complete solve
+

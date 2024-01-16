@@ -204,6 +204,7 @@ pub enum Expression {
     //
     Following(Box<Expr>),
     State(Box<Expr>, usize),
+    Scope(Vec<Expr>, Box<Expr>),
     //
     IfThenElse(Box<Expr>, Box<Expr>, Vec<(Expr, Expr)>, Box<Expr>),
     Quantifier(QtOperator, Vec<Parameter>, Box<Expr>),
@@ -275,6 +276,17 @@ impl ToLang for Expression {
             //
             Expression::Following(kid) => format!("{}'", kid.to_lang(model)),
             Expression::State(kid, state) => format!("{}[{}]", kid.to_lang(model), state),
+            Expression::Scope(l, e) => {
+                let mut res = "<".to_string();
+                if let Some((first, others)) = l.split_first() {
+                    res += &first.to_lang(model);
+                    for p in others.iter() {
+                        res += &format!(", {}", p.to_lang(model));
+                    }
+                }
+                res += &format!(">{}", e.to_lang(model));
+                res
+            }
             //
             Expression::IfThenElse(c, t, l, e) => {
                 let mut s = format!("if {} then {}", c.to_lang(model), t.to_lang(model));
@@ -370,7 +382,17 @@ impl ToDebug for Expression {
             //
             Expression::Following(kid) => format!("{}'", kid.to_debug(model)),
             Expression::State(kid, state) => format!("{}[{}]", kid.to_debug(model), state),
-            //
+            Expression::Scope(l, e) => {
+                let mut res = "<".to_string();
+                if let Some((first, others)) = l.split_first() {
+                    res += &first.to_lang(model);
+                    for p in others.iter() {
+                        res += &format!(", {}", p.to_debug(model));
+                    }
+                }
+                res += &format!(">{}", e.to_debug(model));
+                res
+            } //
             Expression::IfThenElse(c, t, l, e) => {
                 let mut s = format!("if {} then {}", c.to_debug(model), t.to_debug(model));
                 for (x, y) in l.iter() {

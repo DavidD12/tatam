@@ -31,13 +31,12 @@ Entry: () = {
     Interval,
     // Structure,
     // Class,
-
     // Instance,
 
     Declaration,
     Definition,
-    FunDec,
-    FunDef,
+    // FunDec,
+    // FunDef,
 
     Initial,
     Invariant,
@@ -562,9 +561,18 @@ FollowingExpr: Expr = {
 };
 
 ApplyExpr: Expr = {
-    <e:Term> <l:@L> <p:TupleExpr> => {
+    <e:ScopeExpr> <l:@L> <p:TupleExpr> => {
         let position = Position::new(parser.file(), lookup, l);
         let expression = Expression::Apply(Box::new(e), p);
+        Expr::new(expression, Some(position))
+    },
+    ScopeExpr,
+};
+
+ScopeExpr: Expr = {
+    <l:@L>"<" <p:TupleExpr> ">" <e:Term> => {
+        let position = Position::new(parser.file(), lookup, l);
+        let expression = Expression::Scope(p, Box::new(e));
         Expr::new(expression, Some(position))
     },
     Term,

@@ -1,0 +1,22 @@
+cst x: Int
+var y: Int
+
+init inits {
+    y = 0
+}
+
+inv invariants {
+    x > y
+}
+
+trans tr_inc {
+    y < 10 and y' = y + 1
+}
+
+trans tr_loop {
+    y >= 10 and y' = 0
+}
+
+prop = G(F (y = 1))
+
+search infinite solve

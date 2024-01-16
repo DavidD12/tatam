@@ -59,6 +59,14 @@ impl Expr {
                 let kid = kid.resolve(model, entries)?;
                 Expression::State(Box::new(kid), *state)
             }
+            Expression::Scope(l, e) => {
+                let mut v = Vec::new();
+                for p in l.iter() {
+                    v.push(p.resolve(model, entries)?);
+                }
+                let expr = e.resolve(model, entries)?;
+                Expression::Scope(v, Box::new(expr))
+            }
             //
             Expression::IfThenElse(ie, te, list, ee) => {
                 let ie = ie.resolve(model, entries)?;

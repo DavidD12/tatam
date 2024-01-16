@@ -46,6 +46,12 @@ impl Expr {
                 let expression = Expression::State(Box::new(kid), *state);
                 Expr::new(expression, self.position().clone())
             }
+            Expression::Scope(l, e) => {
+                let list = l.iter().map(|x| x.flatten_ltl(model)).collect();
+                let expr = e.flatten_ltl(model);
+                let expression = Expression::Scope(list, Box::new(expr));
+                Expr::new(expression, self.position().clone())
+            }
             //
             Expression::IfThenElse(ce, te, list, ee) => {
                 let ce = ce.flatten_ltl(model);

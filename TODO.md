@@ -23,3 +23,12 @@
 
 # Check
 - parameter size
+
+# Remove le "=" dans prop = F true
+
+# Remove propagate ???
+
+# Unresolved
+- changer le Apply en FunCall(fun_id, params)
+- ajouter un UnresolvedFunCall
+- idem avec les scope: ajouter un UnresolvedScopeVar et un ScopeVar

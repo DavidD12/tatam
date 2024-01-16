@@ -62,6 +62,14 @@ impl Expr {
                 let e = e.resolve_type(types)?;
                 Expression::State(Box::new(e), *state)
             }
+            Expression::Scope(l, e) => {
+                let mut v = vec![];
+                for p in l.iter() {
+                    v.push(p.resolve_type(types)?);
+                }
+                let e = e.resolve_type(types)?;
+                Expression::Scope(v, Box::new(e))
+            }
             Expression::IfThenElse(c, t, ei, e) => {
                 let c = c.resolve_type(types)?;
                 let t = t.resolve_type(types)?;

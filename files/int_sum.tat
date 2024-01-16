@@ -39,7 +39,6 @@ trans t {
     sum' = if sum < 1000 then sum + inc else 0 end
 }
 
-
 prop = G F (sum = 1000 and step = 200)
 
 search[150..150] truncated + complete solve

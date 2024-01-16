@@ -41,6 +41,11 @@ impl Expr {
                 Expression::State(e, state) => {
                     Expression::State(Box::new(e.substitute(old, new)), *state).into()
                 }
+                Expression::Scope(l, e) => {
+                    let l = l.iter().map(|e| e.substitute(old, new)).collect();
+                    let e = e.substitute(old, new);
+                    Expression::Scope(l, Box::new(e)).into()
+                }
                 //
                 Expression::LTLunary(op, kid) => {
                     let kid = kid.substitute(old, new);

@@ -34,6 +34,9 @@ impl Expr {
             //
             (Expression::Following(k1), Expression::Following(k2)) => k1.is_same(k2),
             (Expression::State(k1, s1), Expression::State(k2, s2)) => s1 == s2 && k1.is_same(k2),
+            (Expression::Scope(l1, e1), Expression::Scope(l2, e2)) => {
+                Expr::all_same(l1, l2) && e1.is_same(e2)
+            }
             //
             (Expression::IfThenElse(c1, t1, l1, e1), Expression::IfThenElse(c2, t2, l2, e2)) => {
                 c1.is_same(c2)

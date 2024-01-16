@@ -823,6 +823,10 @@ impl<'a> Solver<'a> {
             //
             Expression::Following(kid) => self.to_smt(kid, state + 1),
             Expression::State(kid, state) => self.to_smt(kid, *state),
+            Expression::Scope(l, e) => {
+                // TODO
+                todo!()
+            }
             //
             Expression::IfThenElse(c, t, list, e) => {
                 let c = self.to_smt(c, state);
