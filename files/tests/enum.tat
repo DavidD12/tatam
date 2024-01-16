@@ -1,0 +1,16 @@
+enum Color = {Black White}
+
+cst x: Color
+var y: Color
+
+init I {
+    x != y
+}
+
+trans T {
+    y' != y
+}
+
+prop = F(y = White)
+
+search infinite + complete solve

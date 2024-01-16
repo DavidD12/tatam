@@ -47,17 +47,18 @@ impl<'a> Solver<'a> {
 
     //------------------------- Sort -------------------------
 
-    fn to_sort(typ: &Type) -> &str {
+    fn to_sort(&self, typ: &Type) -> String {
         match typ {
-            Type::Bool => "Bool",
-            Type::Int => "Int",
-            Type::Real => "Real",
-            Type::IntInterval(_, _) => "Int",
+            Type::Bool => "Bool".to_string(),
+            Type::Int => "Int".to_string(),
+            Type::Real => "Real".to_string(),
+            Type::IntInterval(_, _) => "Int".to_string(),
+
+            Type::Enumerate(id) => self.model.get(*id).unwrap().name().to_string(),
 
             Type::Interval(_) => panic!(),
             Type::Undefined => panic!(),
             Type::Unresolved(_, _) => panic!(),
-            Type::Enumerate(_) => panic!(),
             Type::Function(_, _) => panic!(),
         }
     }
@@ -116,13 +117,32 @@ impl<'a> Solver<'a> {
         format!("_l_{}", state)
     }
 
+    //------------------------- Enum Declaration -------------------------
+
+    fn declare_enumerate(&mut self, enumerate: &Enumerate) {
+        let elements = enumerate
+            .elements()
+            .iter()
+            .map(|e| e.name())
+            .collect::<Vec<_>>();
+        self.smt
+            .declare_enumeration(enumerate.name(), &elements)
+            .unwrap();
+    }
+
+    fn declare_enumerates(&mut self) {
+        for e in self.model.enumerates().iter() {
+            self.declare_enumerate(e);
+        }
+    }
+
     //------------------------- Cst Declaration -------------------------
 
     fn declare_dec_cst(&mut self, dec: &Declaration) {
         let name = &Self::cst_dec_name(dec);
         let typ = dec.get_type(self.model);
-        let sort = Self::to_sort(&typ);
-        self.smt.declare_const(&name, sort).unwrap();
+        let sort = self.to_sort(&typ);
+        self.smt.declare_const(&name, &sort).unwrap();
         if let Type::IntInterval(min, max) = typ {
             self.smt.assert(&format!("(>= {} {})", name, min)).unwrap();
             self.smt.assert(&format!("(<= {} {})", name, max)).unwrap();
@@ -144,12 +164,12 @@ impl<'a> Solver<'a> {
         let params = fun
             .parameters()
             .iter()
-            .map(|p| Self::to_sort(&p.get_type(self.model)).to_string())
+            .map(|p| self.to_sort(&p.get_type(self.model)).to_string())
             .collect::<Vec<_>>();
         let params = params.iter().map(|p| p.as_str()).collect::<Vec<_>>();
         let typ = fun.return_type().get_type(self.model);
-        let sort = Self::to_sort(&typ);
-        self.smt.declare_fun(&name, &params, sort).unwrap();
+        let sort = self.to_sort(&typ);
+        self.smt.declare_fun(&name, &params, &sort).unwrap();
         if let Type::IntInterval(min, max) = typ {
             let fun_params: Vec<Expr> = fun.parameters().iter().map(|p| p.clone().into()).collect();
             let fun_app = Expr::apply(fun.id(), fun_params);
@@ -175,8 +195,8 @@ impl<'a> Solver<'a> {
     fn declare_dec_var(&mut self, dec: &Declaration, state: usize) {
         let name = Self::var_dec_name(dec, state);
         let typ = dec.get_type(self.model);
-        let sort = Self::to_sort(&typ);
-        self.smt.declare_const(&name, sort).unwrap();
+        let sort = self.to_sort(&typ);
+        self.smt.declare_const(&name, &sort).unwrap();
         if let Type::IntInterval(min, max) = typ {
             self.smt.assert(&format!("(>= {} {})", name, min)).unwrap();
             self.smt.assert(&format!("(<= {} {})", name, max)).unwrap();
@@ -198,12 +218,12 @@ impl<'a> Solver<'a> {
         let params = fun
             .parameters()
             .iter()
-            .map(|p| Self::to_sort(&p.get_type(self.model)).to_string())
+            .map(|p| self.to_sort(&p.get_type(self.model)).to_string())
             .collect::<Vec<_>>();
         let params = params.iter().map(|p| p.as_str()).collect::<Vec<_>>();
         let typ = fun.return_type().get_type(self.model);
-        let sort = Self::to_sort(&typ);
-        self.smt.declare_fun(&name, &params, sort).unwrap();
+        let sort = self.to_sort(&typ);
+        self.smt.declare_fun(&name, &params, &sort).unwrap();
         if let Type::IntInterval(min, max) = typ {
             let fun_params: Vec<Expr> = fun.parameters().iter().map(|p| p.clone().into()).collect();
             let fun_app = Expr::apply(fun.id(), fun_params);
@@ -780,7 +800,7 @@ impl<'a> Solver<'a> {
                     NaryOperator::Mul => format!("(*{})", l),
                 }
             }
-            Expression::EnumerateElement(_) => todo!(),
+            Expression::EnumerateElement(id) => self.model.get(*id).unwrap().name().to_string(),
             Expression::Declaration(id) => {
                 let dec = self.model.get(*id).unwrap();
                 if dec.is_constant() {
@@ -916,7 +936,10 @@ impl<'a> Solver<'a> {
     pub fn create_path(&mut self, transitions: usize) {
         self.transitions = transitions;
         // Enum
-        // self.declare_enumerates();
+        self.smt
+            .add_comment("---------- Enumerate ----------")
+            .unwrap();
+        self.declare_enumerates();
         // Cst
         self.smt
             .add_comment("---------- Constant ----------")
@@ -972,31 +995,6 @@ impl<'a> Solver<'a> {
             self.add_state_unicity_with_previous(state);
         }
     }
-
-    /*
-    pub fn inc_transition(&mut self, unicity: bool) {
-        self.transitions += 1;
-        self.with_loop = false;
-
-        // Var
-        self.declare_dec_vars(self.states() - 1);
-        self.declare_fun_vars(self.states() - 1);
-        // LTL Variables
-        self.declare_ltl_non_loop_vars(self.states() - 1);
-
-        // Invariants
-        self.define_invariants(self.states() - 2);
-        // Transition
-        self.define_transitions(self.states() - 2);
-
-        // Unicity
-        if unicity {
-            self.add_state_unicity_with_previous(self.states() - 1);
-        }
-        // LTL Variables: classical semantic until last
-        self.define_ltl_non_loop_vars(self.states() - 2);
-    }
-    */
 
     pub fn add_last_ltl_semantic(&mut self) {
         let future_state = self.states();
@@ -1208,7 +1206,11 @@ impl<'a> Solver<'a> {
             None
         } else {
             Some(match expr.get_type(self.model) {
-                crate::typing::typ::Type::Enumerate(_) => todo!(),
+                crate::typing::typ::Type::Enumerate(id) => {
+                    let enumerate = self.model.get(id).unwrap();
+                    let element = enumerate.from_name(&eval).unwrap();
+                    Expression::EnumerateElement(element.id()).into()
+                }
                 crate::typing::typ::Type::Bool => eval.parse::<bool>().unwrap().into(),
                 crate::typing::typ::Type::Int => eval.parse::<i64>().unwrap().into(),
                 crate::typing::typ::Type::Real => todo!(),
