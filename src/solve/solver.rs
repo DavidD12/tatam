@@ -844,8 +844,21 @@ impl<'a> Solver<'a> {
             Expression::Following(kid) => self.to_smt(kid, state + 1),
             Expression::State(kid, state) => self.to_smt(kid, *state),
             Expression::Scope(l, e) => {
-                // TODO
-                todo!()
+                let mut v = vec![];
+                for dec in self.model.declarations() {
+                    let x: Expr = Expression::Declaration(dec.id()).into();
+                    if !l.iter().any(|y| x.is_same(y)) {
+                        let expr = Expression::Binary(
+                            Box::new(x.clone()),
+                            BinaryOperator::Eq,
+                            Box::new(Expression::Following(Box::new(x.clone())).into()),
+                        );
+                        v.push(expr.into());
+                    }
+                }
+                v.push(*e.clone());
+                let expr = Expression::Nary(NaryOperator::And, v).into();
+                self.to_smt(&expr, state)
             }
             //
             Expression::IfThenElse(c, t, list, e) => {

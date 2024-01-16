@@ -1,0 +1,13 @@
+var x, y, z: Bool
+
+init I {
+    not x and not y
+}
+
+trans T {
+    |x, y| (x' != x and y' != y)
+}
+
+prop = F(y)
+
+search infinite + complete solve
