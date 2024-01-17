@@ -5,6 +5,7 @@ use crate::model::*;
 use crate::typing::*;
 use std::collections::HashMap;
 
+#[derive(Clone, Debug)]
 pub struct Solution {
     pub states: usize,
     pub loop_index: Option<usize>,
@@ -13,124 +14,17 @@ pub struct Solution {
 }
 
 impl Solution {
-    // pub fn eval_into_expr(
-    //     expr: &Expr,
-    //     state: usize,
-    //     smt: &Smt,
-    //     z3_model: &z3::Model,
-    //     completion: bool,
-    // ) -> Option<Expr> {
-    //     let t = expr.get_type(smt.model());
-    //     match t {
-    //         crate::typing::typ::Type::Enumerate(_) => {
-    //             let e = smt.to_datatype(expr, state);
-    //             if let Some(eval) = z3_model.eval(&e, completion) {
-    //                 let eval_string = eval.to_string();
-    //                 if e.to_string() != eval_string {
-    //                     let elt: Option<&EnumerateElement> = smt.model().from_name(&eval_string);
-    //                     if let Some(elt) = elt {
-    //                         return Some(elt.into());
-    //                     }
-    //                 }
-    //             }
-    //             None
-    //         }
-    //         crate::typing::typ::Type::Bool => {
-    //             let e = smt.to_bool(expr, state);
-    //             if let Some(eval) = z3_model.eval(&e, completion) {
-    //                 if e.to_string() != eval.to_string() {
-    //                     if let Some(value) = eval.as_bool() {
-    //                         return Some(value.into());
-    //                     }
-    //                 }
-    //             }
-    //             None
-    //         }
-    //         crate::typing::typ::Type::Int => {
-    //             let e = smt.to_int(expr, state);
-    //             if let Some(eval) = z3_model.eval(&e, completion) {
-    //                 if e.to_string() != eval.to_string() {
-    //                     if let Some(value) = eval.as_i64() {
-    //                         return Some(value.into());
-    //                     }
-    //                 }
-    //             }
-    //             None
-    //         }
-    //         crate::typing::typ::Type::IntInterval(_, _) => {
-    //             let e = smt.to_int(expr, state);
-    //             if let Some(eval) = z3_model.eval(&e, completion) {
-    //                 if e.to_string() != eval.to_string() {
-    //                     if let Some(value) = eval.as_i64() {
-    //                         return Some(value.into());
-    //                     }
-    //                 }
-    //             }
-    //             None
-    //         }
-    //         crate::typing::typ::Type::Real => {
-    //             let e = smt.to_real(expr, state);
-    //             if let Some(eval) = z3_model.eval(&e, completion) {
-    //                 if e.to_string() != eval.to_string() {
-    //                     if let Some(value) = eval.as_real() {
-    //                         return Some(value.into());
-    //                     }
-    //                 }
-    //             }
-    //             None
-    //         }
-
-    //         crate::typing::typ::Type::Interval(_) => panic!(),
-    //         crate::typing::typ::Type::Function(_, _) => panic!(),
-    //         crate::typing::typ::Type::Unresolved(_, _) => panic!(),
-    //         crate::typing::typ::Type::Undefined => panic!(),
-    //     }
-    // }
-
-    // pub fn new(smt: &Smt, z3_model: &z3::Model) -> Self {
-    //     let loop_index = smt.get_loop_index(z3_model);
-    //     // Constantes
-    //     let mut cst_dec = HashMap::new();
-    //     for id in smt.model().cst_declaration_ids() {
-    //         let eval = Self::eval_into_expr(&id.into(), 0, smt, z3_model, false);
-    //         cst_dec.insert(id, eval);
-    //     }
-
-    //     // Variables / States
-    //     let mut var_dec = HashMap::new();
-    //     let list = smt.model().var_declaration_ids();
-
-    //     for id in list.iter() {
-    //         var_dec.insert(*id, vec![]);
-    //     }
-
-    //     for id in list.into_iter() {
-    //         let v = var_dec.get_mut(&id).unwrap();
-    //         for state in 0..smt.states() {
-    //             let eval = Self::eval_into_expr(&id.into(), state, smt, z3_model, false);
-    //             v.push(eval);
-    //         }
-    //     }
-
-    //     Self {
-    //         states: smt.states(),
-    //         loop_index,
-    //         cst_dec,
-    //         var_dec,
-    //     }
-    // }
-
     pub fn get_default_value(typ: &Type) -> Expr {
         match typ {
             Type::Enumerate(_) => todo!(),
             Type::Bool => false.into(),
             Type::Int => 0.into(),
+            Type::Interval(_) => 0.into(),
             Type::IntInterval(min, _) => (*min).into(),
             Type::Real => 0.into(),
             //
             Type::Undefined => panic!(),
             Type::Unresolved(_, _) => panic!(),
-            Type::Interval(_) => panic!(),
             Type::Function(_, _) => panic!(),
         }
     }

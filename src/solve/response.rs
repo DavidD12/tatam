@@ -2,6 +2,7 @@ use super::*;
 use crate::common::*;
 use crate::model::*;
 
+#[derive(Clone, Debug)]
 pub enum Response {
     NoSolution(usize),
     Unknown,

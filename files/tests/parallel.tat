@@ -1,0 +1,22 @@
+
+var x, y, step, total: Int
+
+init I {
+    x >= 0 and y >= 0 and
+    step = 0 and
+    total = 0
+
+}
+
+inv Inv {
+    x > 0 and x < 10 and
+    y > 0 and y < 10 and
+    x != y
+}
+
+trans T0 {
+    (total' = total + x + y) and (step' = step + 1)
+}
+
+prop = F(step = 1000 and total = 2 * step)
+search[1000..1100] truncated solve

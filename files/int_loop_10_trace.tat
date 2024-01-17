@@ -1,17 +1,17 @@
 
 interval I = -20..20
-var x: I
+var x: Int
 
 init I0 {
     x = 0
 }
 
 trans T0 {
-    (x < 10) and (x' = x + 1)
+    (x < 200) and (x' = x + 1)
 }
 trans T1 {
-    (x >= 10) and (x' = -10)
+    (x >= 200) and (x' = -10)
 }
 
 prop = F(x < 0)
-search infinite solve
+search infinite + complete solve

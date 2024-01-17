@@ -1,6 +1,6 @@
 [package]
 name = "tatam"
-version = "0.1.5"
+version = "0.2.1"
 edition = "2021"
 authors = ["David Doose <David.Doose@gmail.com>"]
 license = "LGPL-3.0-only"
@@ -26,6 +26,8 @@ fraction = "0.13.0"
 d-stu = "0.1.5"
 termion = "2.0.1"
 smt_sb-rs = "0.1.0"
+threadpool = "1.8.1"
+num_cpus = "1.16.0"
 
 [build-dependencies]
 lalrpop = { version = "0.19.8", features = ["lexer"] }
