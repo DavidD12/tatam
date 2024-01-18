@@ -1,0 +1,41 @@
+enum Position = { Home, Factory, Client }
+enum Action = { 
+    Init,
+    // Boxes Actions
+    Delivery, Consume,
+    // Robot Actions
+    Home_to_Factory, Factory_to_Client, Client_to_Factory, Client_to_Home,
+    Load,
+    Unload
+}
+
+cst delivery_quantity: Int
+cst robot_capacity: Int
+
+var robot_position: Position
+var action: Action
+
+var factory_boxes: Int
+var robot_boxes: Int
+var client_boxes: Int
+
+init I {
+    delivery_quantity = 10 and
+    robot_capacity = 3 and
+
+    robot_position = Home and
+    action = Init and
+
+    factory_boxes = 0 and
+    robot_boxes = 0 and
+    client_boxes = 0
+}
+
+trans delivery {
+    factory_boxes = 0 and client_boxes = 0 and robot_boxes = 0 and
+    |action, factory_boxes|(action' = Delivery and factory_boxes' = delivery_quantity)
+}
+
+prop = F(factory_boxes > 0)
+
+search truncated solve

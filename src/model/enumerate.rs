@@ -97,7 +97,10 @@ impl Named<EnumerateId> for Enumerate {
     }
 
     fn set_id(&mut self, id: EnumerateId) {
-        self.id = id
+        self.id = id;
+        for e in self.elements.iter_mut() {
+            e.set_enumerate_id(id)
+        }
     }
 
     fn name(&self) -> &str {
@@ -179,6 +182,10 @@ impl EnumerateElement {
         let id = EnumerateElementId::empty();
         let name = name.into();
         Self { id, name, position }
+    }
+
+    pub fn set_enumerate_id(&mut self, id: EnumerateId) {
+        self.id.0 = id
     }
 }
 
