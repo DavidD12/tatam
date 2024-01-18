@@ -1,4 +1,4 @@
-enum Color = {Black White}
+enum Color = {Black, White}
 
 cst x: Color
 var y: Color

@@ -1,11 +1,7 @@
-use std::time::Instant;
-
 use super::*;
 use crate::model::Model;
 use crate::search::*;
 use crate::Args;
-use crate::ToLang;
-use smt_sb::SatResult;
 
 pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> Response {
     let mut model = model.clone();

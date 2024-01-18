@@ -51,7 +51,7 @@ Include: () = "include" <file:String> => {
 
 //------------------------- Enum -------------------------
 
-Enumerate: () = "enum" <i:Identifier> "=" "{" <elts:Identifier+> "}" => {
+Enumerate: () = "enum" <i:Identifier> "=" "{" <elts:Identifiers> "}" => {
     let position = Some(i.position);
     let mut enumerate = Enumerate::new(i.name, position);
     for e in elts {
