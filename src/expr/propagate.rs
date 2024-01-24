@@ -258,8 +258,9 @@ impl Expr {
                         }
                         left.implies(right)
                     }
+                    BinaryOperator::Min => left.min(right),
+                    BinaryOperator::Max => left.max(right),
                 }
-                //
             }
             Expression::Nary(op, kids) => match op {
                 NaryOperator::And => {

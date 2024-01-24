@@ -77,6 +77,13 @@ pub fn resolve_parallel(
                 );
             }
 
+            if args.verbose > 2 {
+                println!(
+                    "========================= {} transition =========================",
+                    transitions
+                );
+            }
+
             if let Some(max) = tn.max() {
                 if transitions > max {
                     pool.join();
@@ -153,6 +160,101 @@ pub fn resolve_parallel(
                             complete_ruinning = false;
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+pub fn resolve_parallel_complete(
+    model: &Model,
+    _pretty: &mut d_stuff::Pretty,
+    args: &Args,
+    tn: TransitionNumber,
+    pool_size: usize,
+) -> Response {
+    let pool = ThreadPool::new(pool_size);
+    let (tx, rx) = channel();
+
+    let mut transitions = tn.min();
+
+    loop {
+        // -------------------- Bound Reached --------------------
+        if let Some(max) = tn.max() {
+            if transitions > max {
+                pool.join();
+                return Response::BoundReached;
+            }
+        }
+
+        // -------------------- Send Jobs --------------------
+        #[cfg(debug_assertions)]
+        {
+            println!(
+                "===> pool = {}+{} / {}",
+                pool.queued_count(),
+                pool.active_count(),
+                pool.max_count()
+            );
+        }
+
+        while pool.queued_count() + pool.active_count() < pool.max_count() {
+            #[cfg(debug_assertions)]
+            {
+                println!(
+                    "========================= {} transition =========================",
+                    transitions
+                );
+            }
+
+            if args.verbose > 2 {
+                println!(
+                    "========================= {} transition =========================",
+                    transitions
+                );
+            }
+
+            if let Some(max) = tn.max() {
+                if transitions > max {
+                    pool.join();
+                    return Response::BoundReached;
+                }
+            }
+
+            #[cfg(debug_assertions)]
+            {
+                println!(">>> execute truncated {} <<<", transitions);
+            }
+            execute_complete(model, transitions, args, &tx, &pool);
+            transitions += 1;
+
+            #[cfg(debug_assertions)]
+            {
+                println!(
+                    "---> pool = {}+{} / {}",
+                    pool.queued_count(),
+                    pool.active_count(),
+                    pool.max_count()
+                );
+            }
+        }
+
+        // -------------------- Read Response --------------------
+        let msg = rx.recv().unwrap();
+        #[cfg(debug_assertions)]
+        {
+            println!("------------ Response ------------",);
+            println!("request: {:?}", msg.request);
+        }
+        match msg.response {
+            Some(solution) => {
+                pool.join();
+                return solution;
+            }
+            _ => {
+                #[cfg(debug_assertions)]
+                {
+                    println!("response: no solution");
                 }
             }
         }

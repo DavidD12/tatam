@@ -20,8 +20,8 @@ var robot_boxes: Int
 var client_boxes: Int
 
 init I {
-    delivery_quantity = 10 /* 30 */ and
-    robot_capacity = 10 and
+    delivery_quantity = 20 /* 30 */ and
+    robot_capacity = 3 and
 
     robot_position = Home and
     action = Init and
@@ -71,8 +71,8 @@ trans load {
     robot_position = Factory and robot_boxes = 0 and factory_boxes > 0 and
     |action, robot_boxes, factory_boxes|(
         action' = Load and 
-        robot_boxes' = factory_boxes min robot_capacity and
-        factory_boxes' = factory_boxes - factory_boxes min robot_capacity
+        robot_boxes' = if factory_boxes <= robot_capacity then factory_boxes else robot_capacity end and
+        factory_boxes' = factory_boxes - if factory_boxes <= robot_capacity then factory_boxes else robot_capacity end
     )
 }
 
@@ -85,20 +85,6 @@ trans unload {
     )
 }
 
-prop = F(action = Consume)
-// search truncated solve
-// -> State = 30 time = 17 sec
+prop = G(F(action = Consume))
 
-// prop = F(action = Consume)
-// search infinite solve
-// -> State = 32 time = 1 min 2 sec
-
-// prop = G(F(action = Consume))
-// search truncated solve
-// -> State = 30 time = 13 sec
-
-// prop = G(F(action = Consume))
-// search infinite solve
-// -> State = 32 time = 32 sec
-
-search truncated solve
+search infinite solve

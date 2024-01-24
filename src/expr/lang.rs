@@ -219,6 +219,20 @@ impl Expr {
         let expression = Expression::Binary(left, op, right);
         Expr::new(expression, None)
     }
+    pub fn min(self, other: Expr) -> Expr {
+        let left = Box::new(self);
+        let right = Box::new(other);
+        let op = BinaryOperator::Min;
+        let expression = Expression::Binary(left, op, right);
+        Expr::new(expression, None)
+    }
+    pub fn max(self, other: Expr) -> Expr {
+        let left = Box::new(self);
+        let right = Box::new(other);
+        let op = BinaryOperator::Max;
+        let expression = Expression::Binary(left, op, right);
+        Expr::new(expression, None)
+    }
 
     pub fn and(v: Vec<Expr>) -> Expr {
         Expr::new(Expression::Nary(NaryOperator::And, v), None)
@@ -255,10 +269,10 @@ impl Expr {
     pub fn prod(params: Vec<Parameter>, e: Expr) -> Expr {
         QtOperator::Prod.new(params, e).into()
     }
-    pub fn min(params: Vec<Parameter>, e: Expr) -> Expr {
+    pub fn minimum(params: Vec<Parameter>, e: Expr) -> Expr {
         QtOperator::Min.new(params, e).into()
     }
-    pub fn max(params: Vec<Parameter>, e: Expr) -> Expr {
+    pub fn maximum(params: Vec<Parameter>, e: Expr) -> Expr {
         QtOperator::Max.new(params, e).into()
     }
 

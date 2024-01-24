@@ -29,7 +29,7 @@ impl Expression {
                     }
                 }
             },
-            Expression::Binary(_, op, _) => match op {
+            Expression::Binary(left, op, right) => match op {
                 BinaryOperator::Eq => Type::Bool,
                 BinaryOperator::Ne => Type::Bool,
                 BinaryOperator::Lt => Type::Bool,
@@ -37,6 +37,30 @@ impl Expression {
                 BinaryOperator::Ge => Type::Bool,
                 BinaryOperator::Gt => Type::Bool,
                 BinaryOperator::Implies => Type::Bool,
+                BinaryOperator::Min => match (left.get_type(model), right.get_type(model)) {
+                    (Type::Int, Type::Int) => Type::Int,
+                    (Type::Real, Type::Real) => Type::Real,
+                    (Type::IntInterval(min1, max1), Type::IntInterval(min2, max2)) => {
+                        Type::IntInterval(min1.min(min2), max1.min(max2))
+                    }
+                    (Type::IntInterval(min, max), Type::Int) => Type::IntInterval(min, max),
+                    (Type::IntInterval(min, max), Type::Real) => Type::IntInterval(min, max),
+                    (Type::Int, Type::IntInterval(min, max)) => Type::IntInterval(min, max),
+                    (Type::Real, Type::IntInterval(min, max)) => Type::IntInterval(min, max),
+                    _ => Type::Undefined,
+                },
+                BinaryOperator::Max => match (left.get_type(model), right.get_type(model)) {
+                    (Type::Int, Type::Int) => Type::Int,
+                    (Type::Real, Type::Real) => Type::Real,
+                    (Type::IntInterval(min1, max1), Type::IntInterval(min2, max2)) => {
+                        Type::IntInterval(min1.max(min2), max1.max(max2))
+                    }
+                    (Type::IntInterval(min, max), Type::Int) => Type::IntInterval(min, max),
+                    (Type::IntInterval(min, max), Type::Real) => Type::IntInterval(min, max),
+                    (Type::Int, Type::IntInterval(min, max)) => Type::IntInterval(min, max),
+                    (Type::Real, Type::IntInterval(min, max)) => Type::IntInterval(min, max),
+                    _ => Type::Undefined,
+                },
             },
             Expression::Nary(op, kids) => match op {
                 NaryOperator::And => Type::Bool,

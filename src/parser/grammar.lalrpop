@@ -147,6 +147,9 @@ Search: () = "search" <tn:TransitionNumber?> <pt:PathType> <st:SearchType> => {
 
 PathType: PathType = {
     "initial" => PathType::Initial,
+    "complete" => {
+        PathType::Path{infinite: false, truncated: false, finite: false, complete: true}
+    },
     "infinite" <c:("+""complete")?> => 
     {
         PathType::Path{infinite: true, truncated: false, finite: false, complete: c.is_some()}
@@ -425,11 +428,25 @@ AddSubExpr: Expr = {
 };
 
 MulExpr: Expr = {
-    <l:@L><e:PrefixUnaryExpr> <v: ("*" <PrefixUnaryExpr>)+> => {
+    <l:@L><e:MinMaxExpr> <v: ("*" <MinMaxExpr>)+> => {
         let position = Some(Position::new(parser.file(), lookup, l));
         let mut kids = vec![e];
         kids.extend(v);
         let expression = Expression::Nary(NaryOperator::Mul, kids);
+        Expr::new(expression, position)
+    },
+    MinMaxExpr,
+};
+
+MinMaxExpr: Expr = {
+    <left:MinMaxExpr> <l:@L>"min" <right:PrefixUnaryExpr> => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let expression = Expression::Binary(Box::new(left), BinaryOperator::Min, Box::new(right));
+        Expr::new(expression, position)
+    },
+    <left:MinMaxExpr> <l:@L>"max" <right:PrefixUnaryExpr> => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let expression = Expression::Binary(Box::new(left), BinaryOperator::Max, Box::new(right));
         Expr::new(expression, position)
     },
     PrefixUnaryExpr,

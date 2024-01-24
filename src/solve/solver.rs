@@ -784,6 +784,12 @@ impl<'a> Solver<'a> {
                     BinaryOperator::Ge => format!("(>= {} {})", left, right),
                     BinaryOperator::Gt => format!("(> {} {})", left, right),
                     BinaryOperator::Implies => format!("(=> {} {})", left, right),
+                    BinaryOperator::Min => {
+                        format!("(ite (<= {} {}) {} {})", left, right, left, right)
+                    }
+                    BinaryOperator::Max => {
+                        format!("(ite (>= {} {}) {} {})", left, right, left, right)
+                    }
                 }
             }
             Expression::Nary(op, list) => {

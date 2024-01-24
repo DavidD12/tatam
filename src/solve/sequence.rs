@@ -27,6 +27,13 @@ pub fn resolve_sequence(
             );
         }
 
+        if args.verbose > 2 {
+            println!(
+                "========================= {} transition =========================",
+                transitions
+            );
+        }
+
         // -------------------- Bound Reached --------------------
         if let Some(max) = tn.max() {
             if transitions > max {

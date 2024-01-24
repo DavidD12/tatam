@@ -1,0 +1,191 @@
+enum Position = { Home, Factory, Client }
+enum Action = { Delivery, Consume}
+enum RobotState = { 
+    Ready,
+    MovingToFactory,
+    MovingToClient,
+    MovingToHome,
+    Load,
+    Unload
+}
+
+cst delivery_quantity: Int
+cst robot_capacity: Int
+
+cst move_to_home_duration: Int
+cst move_to_factory_duration: Int
+cst move_to_client_duration: Int
+cst load_duration: Int
+cst unload_duration: Int
+
+var action: Action
+var robot_position: Position
+var robot_state: RobotState
+var robot_clock: Int
+
+var factory_boxes: Int
+var robot_boxes: Int
+var client_boxes: Int
+
+var duration: Int
+
+init Init_Cst {
+    delivery_quantity = 10 /* 30 */ and
+    robot_capacity = 6 and
+
+    move_to_factory_duration = 5 and
+    move_to_client_duration = 10 and
+    move_to_home_duration = 15 and
+
+    load_duration = 2 and
+    unload_duration = 3
+}
+
+init Init_Var {
+    action = Consume and
+
+    robot_position = Home and
+    robot_state = Ready and
+    robot_clock = 0 and
+
+    factory_boxes = 0 and
+    robot_boxes = 0 and
+    client_boxes = 0 and
+
+    duration = 0
+}
+
+inv Inv {
+    duration >= 0 
+    /*
+    and
+    (duration != 0) implies ((duration at next default 0) = 0)
+    */
+}
+
+trans delivery {
+    action = Consume and factory_boxes = 0 and client_boxes = 0 and robot_boxes = 0 and
+    |action, factory_boxes|(action' = Delivery and factory_boxes' = delivery_quantity)
+}
+
+trans consume {
+    action = Delivery and client_boxes = delivery_quantity and
+    |action, client_boxes|(action' = Consume and client_boxes' = 0)
+}
+
+trans start_moving_to_factory {
+    robot_state = Ready and
+    |robot_state|(
+        robot_state' = MovingToFactory
+    )
+}
+trans finish_moving_to_factory {
+    robot_state = MovingToFactory and 
+    robot_clock = move_to_factory_duration and
+    |robot_state, robot_position, robot_clock|(
+        robot_state' = Ready and
+        robot_position' = Factory and
+        robot_clock' = 0
+    )
+}
+
+trans start_moving_to_client {
+    robot_state = Ready and
+    |robot_state|(
+        robot_state' = MovingToClient
+    )
+}
+trans finish_moving_to_client {
+    robot_state = MovingToClient and
+    robot_clock = move_to_client_duration and
+    |robot_state, robot_position, robot_clock|(
+        robot_state' = Ready and
+        robot_position' = Client and
+        robot_clock' = 0
+    )
+}
+
+trans start_moving_to_home {
+    robot_state = Ready and
+    |robot_state|(
+        robot_state' = MovingToHome
+    )
+}
+trans finish_moving_to_home {
+    robot_state = MovingToHome and
+    robot_clock = move_to_home_duration and
+    |robot_state, robot_position, robot_clock|(
+        robot_state' = Ready and
+        robot_position' = Home and
+        robot_clock' = 0
+    )
+}
+
+trans start_load {
+    robot_state = Ready and robot_position = Factory and robot_boxes = 0 and factory_boxes > 0 and
+    |robot_state|(
+        robot_state' = Load
+    )
+}
+
+trans finish_load {
+    robot_state = Load and
+    robot_clock = load_duration and
+    |robot_state, robot_boxes, factory_boxes, robot_clock|(
+        robot_state' = Ready and 
+        robot_boxes' = if factory_boxes <= robot_capacity then factory_boxes else robot_capacity end and
+        factory_boxes' = factory_boxes - if factory_boxes <= robot_capacity then factory_boxes else robot_capacity end and
+        robot_clock' = 0
+    )
+}
+
+trans start_unload {
+    robot_state = Ready and robot_position = Client and robot_boxes > 0 and 
+    |robot_state|(
+        robot_state' = Unload
+    )
+}
+
+trans finish_unload {
+    robot_state = Unload and
+    robot_clock = unload_duration and
+    |robot_state, robot_boxes, client_boxes, robot_clock|(
+        robot_state' = Ready and
+        robot_boxes' = 0 and
+        client_boxes' = client_boxes + robot_boxes and
+        robot_clock' = 0
+    )
+}
+
+trans time_duration {
+    robot_state != Ready and duration = 0 and
+    |duration, robot_clock|(
+        robot_clock' = robot_clock + duration and
+        duration' != 0
+    )
+}
+
+// prop = F(action = Consume)
+// search truncated solve
+// -> State = 30 time = 17 sec
+
+// prop = F(action = Consume)
+// search infinite solve
+// -> State = 32 time = 1 min 2 sec
+
+// prop = G(F(action = Consume))
+// search truncated solve
+// -> State = 30 time = 13 sec
+
+// prop = G(F(action = Consume))
+// search infinite solve
+// -> State = 32 time = 32 sec
+
+// prop = G(F(action = Delivery and F(action = Consume)))
+// search truncated solve
+
+// prop = F(robot_position = Factory)
+
+prop = F(duration != 0 and X(duration != 0))
+
+search truncated solve

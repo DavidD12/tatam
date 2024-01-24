@@ -38,6 +38,8 @@ pub enum BinaryOperator {
     Gt,
     //
     Implies,
+    Min,
+    Max,
 }
 
 impl BinaryOperator {
@@ -57,6 +59,9 @@ impl std::fmt::Display for BinaryOperator {
             Self::Gt => write!(f, ">"),
             //
             Self::Implies => write!(f, "=>"),
+            //
+            Self::Min => write!(f, "min"),
+            Self::Max => write!(f, "max"),
         }
     }
 }
@@ -277,14 +282,14 @@ impl ToLang for Expression {
             Expression::Following(kid) => format!("{}'", kid.to_lang(model)),
             Expression::State(kid, state) => format!("{}[{}]", kid.to_lang(model), state),
             Expression::Scope(l, e) => {
-                let mut res = "<".to_string();
+                let mut res = "|".to_string();
                 if let Some((first, others)) = l.split_first() {
                     res += &first.to_lang(model);
                     for p in others.iter() {
                         res += &format!(", {}", p.to_lang(model));
                     }
                 }
-                res += &format!(">{}", e.to_lang(model));
+                res += &format!("|{}", e.to_lang(model));
                 res
             }
             //
@@ -383,14 +388,14 @@ impl ToDebug for Expression {
             Expression::Following(kid) => format!("{}'", kid.to_debug(model)),
             Expression::State(kid, state) => format!("{}[{}]", kid.to_debug(model), state),
             Expression::Scope(l, e) => {
-                let mut res = "<".to_string();
+                let mut res = "|".to_string();
                 if let Some((first, others)) = l.split_first() {
                     res += &first.to_lang(model);
                     for p in others.iter() {
                         res += &format!(", {}", p.to_debug(model));
                     }
                 }
-                res += &format!(">{}", e.to_debug(model));
+                res += &format!("|{}", e.to_debug(model));
                 res
             } //
             Expression::IfThenElse(c, t, l, e) => {

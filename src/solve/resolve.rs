@@ -33,17 +33,27 @@ pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> 
                 {
                     println!("pool size = {}", pool_size);
                 }
-                resolve_parallel(
-                    &model,
-                    pretty,
-                    args,
-                    infinite,
-                    truncated,
-                    finite,
-                    complete,
-                    model.search().transitions(),
-                    pool_size,
-                )
+                if !truncated && !infinite && !finite && complete {
+                    resolve_parallel_complete(
+                        &model,
+                        pretty,
+                        args,
+                        model.search().transitions(),
+                        pool_size,
+                    )
+                } else {
+                    resolve_parallel(
+                        &model,
+                        pretty,
+                        args,
+                        infinite,
+                        truncated,
+                        finite,
+                        complete,
+                        model.search().transitions(),
+                        pool_size,
+                    )
+                }
             } else {
                 resolve_sequence(
                     &model,
