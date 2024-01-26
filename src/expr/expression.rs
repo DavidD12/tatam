@@ -182,6 +182,49 @@ impl std::fmt::Display for LTLBinaryOperator {
     }
 }
 
+//-------------------------------------------------- State Expression --------------------------------------------------
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum State {
+    First,
+    Current,
+    Last,
+}
+
+impl std::fmt::Display for State {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            State::First => write!(f, "first"),
+            State::Current => write!(f, "current"),
+            State::Last => write!(f, "Last"),
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub struct StateIndex(pub State, pub isize);
+
+impl StateIndex {
+    pub fn state(&self) -> State {
+        self.0
+    }
+    pub fn shift(&self) -> isize {
+        self.1
+    }
+}
+
+impl std::fmt::Display for StateIndex {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.shift() < 0 {
+            write!(f, "{} - {}", self.state(), -self.shift())
+        } else if self.shift() == 0 {
+            write!(f, "{}", self.state())
+        } else {
+            write!(f, "{} + {}", self.state(), self.shift())
+        }
+    }
+}
+
 //-------------------------------------------------- Expression --------------------------------------------------
 
 #[derive(Clone, Debug)]
@@ -208,7 +251,7 @@ pub enum Expression {
     As(Box<Expr>, Type, Box<Expr>),
     //
     Following(Box<Expr>),
-    State(Box<Expr>, usize),
+    State(Box<Expr>, StateIndex, Option<Box<Expr>>),
     Scope(Vec<Expr>, Box<Expr>),
     //
     IfThenElse(Box<Expr>, Box<Expr>, Vec<(Expr, Expr)>, Box<Expr>),
@@ -280,7 +323,17 @@ impl ToLang for Expression {
             ),
             //
             Expression::Following(kid) => format!("{}'", kid.to_lang(model)),
-            Expression::State(kid, state) => format!("{}[{}]", kid.to_lang(model), state),
+            Expression::State(expr, state, default) => match default {
+                Some(default) => {
+                    format!(
+                        "({} at {} default {})",
+                        expr.to_lang(model),
+                        state,
+                        default.to_lang(model)
+                    )
+                }
+                None => format!("({} at {})", expr.to_lang(model), state),
+            },
             Expression::Scope(l, e) => {
                 let mut res = "|".to_string();
                 if let Some((first, others)) = l.split_first() {
@@ -386,7 +439,17 @@ impl ToDebug for Expression {
             ),
             //
             Expression::Following(kid) => format!("{}'", kid.to_debug(model)),
-            Expression::State(kid, state) => format!("{}[{}]", kid.to_debug(model), state),
+            Expression::State(expr, state, default) => match default {
+                Some(default) => {
+                    format!(
+                        "({} at {} default {})",
+                        expr.to_debug(model),
+                        state,
+                        default.to_debug(model)
+                    )
+                }
+                None => format!("({} at {})", expr.to_debug(model), state),
+            },
             Expression::Scope(l, e) => {
                 let mut res = "|".to_string();
                 if let Some((first, others)) = l.split_first() {

@@ -75,14 +75,16 @@ trans consume {
 
 trans start_moving_to_factory {
     robot_state = Ready and
-    |robot_state|(
+    |duration, robot_state|(
+        duration' = 0 and
         robot_state' = MovingToFactory
     )
 }
 trans finish_moving_to_factory {
     robot_state = MovingToFactory and 
     robot_clock = move_to_factory_duration and
-    |robot_state, robot_position, robot_clock|(
+    |duration, robot_state, robot_position, robot_clock|(
+        duration' = 0 and
         robot_state' = Ready and
         robot_position' = Factory and
         robot_clock' = 0
@@ -91,14 +93,16 @@ trans finish_moving_to_factory {
 
 trans start_moving_to_client {
     robot_state = Ready and
-    |robot_state|(
+    |duration, robot_state|(
+        duration' = 0 and
         robot_state' = MovingToClient
     )
 }
 trans finish_moving_to_client {
     robot_state = MovingToClient and
     robot_clock = move_to_client_duration and
-    |robot_state, robot_position, robot_clock|(
+    |duration, robot_state, robot_position, robot_clock|(
+        duration' = 0 and
         robot_state' = Ready and
         robot_position' = Client and
         robot_clock' = 0
@@ -107,14 +111,16 @@ trans finish_moving_to_client {
 
 trans start_moving_to_home {
     robot_state = Ready and
-    |robot_state|(
+    |duration, robot_state|(
+        duration' = 0 and
         robot_state' = MovingToHome
     )
 }
 trans finish_moving_to_home {
     robot_state = MovingToHome and
     robot_clock = move_to_home_duration and
-    |robot_state, robot_position, robot_clock|(
+    |duration, robot_state, robot_position, robot_clock|(
+        duration' = 0 and
         robot_state' = Ready and
         robot_position' = Home and
         robot_clock' = 0
@@ -123,25 +129,28 @@ trans finish_moving_to_home {
 
 trans start_load {
     robot_state = Ready and robot_position = Factory and robot_boxes = 0 and factory_boxes > 0 and
-    |robot_state|(
+    |duration, robot_state|(
+        duration' = 0 and
         robot_state' = Load
     )
 }
-
+    
 trans finish_load {
     robot_state = Load and
     robot_clock = load_duration and
-    |robot_state, robot_boxes, factory_boxes, robot_clock|(
+    |duration, robot_state, robot_boxes, factory_boxes, robot_clock|(
+        duration' = 0 and
         robot_state' = Ready and 
-        robot_boxes' = if factory_boxes <= robot_capacity then factory_boxes else robot_capacity end and
-        factory_boxes' = factory_boxes - if factory_boxes <= robot_capacity then factory_boxes else robot_capacity end and
+        robot_boxes' = factory_boxes min robot_capacity and
+        factory_boxes' = factory_boxes - factory_boxes min robot_capacity and
         robot_clock' = 0
     )
 }
 
 trans start_unload {
     robot_state = Ready and robot_position = Client and robot_boxes > 0 and 
-    |robot_state|(
+    |duration, robot_state|(
+        duration' = 0 and
         robot_state' = Unload
     )
 }
@@ -149,7 +158,8 @@ trans start_unload {
 trans finish_unload {
     robot_state = Unload and
     robot_clock = unload_duration and
-    |robot_state, robot_boxes, client_boxes, robot_clock|(
+    |duration, robot_state, robot_boxes, client_boxes, robot_clock|(
+        duration' = 0 and
         robot_state' = Ready and
         robot_boxes' = 0 and
         client_boxes' = client_boxes + robot_boxes and
@@ -160,8 +170,8 @@ trans finish_unload {
 trans time_duration {
     robot_state != Ready and duration = 0 and
     |duration, robot_clock|(
-        robot_clock' = robot_clock + duration and
-        duration' != 0
+        robot_clock' = robot_clock + duration' and
+        duration' > 0
     )
 }
 
@@ -186,6 +196,18 @@ trans time_duration {
 
 // prop = F(robot_position = Factory)
 
-prop = F(duration != 0 and X(duration != 0))
+inv time_constraint {
+    (duration at current) > 0 implies (duration at current +1 default 0) = 0
+}
 
-search truncated solve
+init final {
+    (action = Consume at last) 
+    and (action = Delivery at first + 1 default true)
+}
+
+// prop = F(duration != 0 and X(duration != 0))
+// prop = F(action = Delivery and F(action = Consume))
+// prop = F(robot_position = Factory)
+// prop = F(robot_state = MovingToFactory and duration > 0)
+
+search[1..] truncated solve

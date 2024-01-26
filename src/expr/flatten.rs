@@ -41,9 +41,13 @@ impl Expr {
                 let expression = Expression::Following(Box::new(kid));
                 Expr::new(expression, self.position().clone())
             }
-            Expression::State(kid, state) => {
+            Expression::State(kid, state, default) => {
                 let kid = kid.flatten_ltl(model);
-                let expression = Expression::State(Box::new(kid), *state);
+                let default = match default {
+                    Some(default) => Some(Box::new(default.flatten_ltl(model))),
+                    None => None,
+                };
+                let expression = Expression::State(Box::new(kid), *state, default);
                 Expr::new(expression, self.position().clone())
             }
             Expression::Scope(l, e) => {

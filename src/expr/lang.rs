@@ -281,9 +281,19 @@ impl Expr {
         let expression = Expression::Following(kid);
         Expr::new(expression, None)
     }
-    pub fn state(self, state: usize) -> Expr {
+    pub fn state_with_default(self, state: StateIndex, default: Option<Expr>) -> Expr {
         let kid = Box::new(self);
-        let expression = Expression::State(kid, state);
+        let default = match default {
+            Some(default) => Some(Box::new(default)),
+            None => None,
+        };
+        let expression = Expression::State(kid, state, default);
+        Expr::new(expression, None)
+    }
+    pub fn state(self, index: usize) -> Expr {
+        let kid = Box::new(self);
+        let state_expr = StateIndex(State::First, index as isize);
+        let expression = Expression::State(kid, state_expr, None);
         Expr::new(expression, None)
     }
 }

@@ -55,9 +55,13 @@ impl Expr {
                 let kid = kid.resolve(model, entries)?;
                 Expression::Following(Box::new(kid))
             }
-            Expression::State(kid, state) => {
+            Expression::State(kid, state, default) => {
                 let kid = kid.resolve(model, entries)?;
-                Expression::State(Box::new(kid), *state)
+                let default = match default {
+                    Some(default) => Some(Box::new(default.resolve(model, entries)?)),
+                    None => None,
+                };
+                Expression::State(Box::new(kid), *state, default)
             }
             Expression::Scope(l, e) => {
                 let mut v = Vec::new();

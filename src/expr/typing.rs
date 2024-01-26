@@ -142,7 +142,7 @@ impl Expression {
             Expression::As(_, typ, _) => typ.get_type(model),
             //
             Expression::Following(kid) => kid.get_type(model),
-            Expression::State(kid, _) => kid.get_type(model),
+            Expression::State(kid, _, __) => kid.get_type(model),
             Expression::Scope(_, e) => e.get_type(model),
             //
             Expression::IfThenElse(_, te, list, ee) => {
@@ -288,7 +288,14 @@ impl Expr {
             }
             //
             Expression::Following(kid) => kid.check_type(model),
-            Expression::State(kid, _) => kid.check_type(model),
+            Expression::State(kid, _, default) => {
+                kid.check_type(model)?;
+                if let Some(default) = default {
+                    default.check_type(model)?;
+                    default.check_subtype(model, &kid.get_type(model))?;
+                }
+                Ok(())
+            }
             Expression::Scope(_, e) => e.check_is_bool(model),
             //
             Expression::IfThenElse(ce, te, list, ee) => {

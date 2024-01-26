@@ -58,9 +58,13 @@ impl Expr {
                 let e = e.resolve_type(types)?;
                 Expression::Following(Box::new(e))
             }
-            Expression::State(e, state) => {
+            Expression::State(e, state, default) => {
                 let e = e.resolve_type(types)?;
-                Expression::State(Box::new(e), *state)
+                let d = match default {
+                    Some(d) => Some(Box::new(d.resolve_type(types)?)),
+                    None => None,
+                };
+                Expression::State(Box::new(e), *state, d)
             }
             Expression::Scope(l, e) => {
                 let mut v = vec![];

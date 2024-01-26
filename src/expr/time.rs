@@ -4,6 +4,9 @@ use crate::model::*;
 use crate::*;
 
 impl Expr {
+    /**
+     * Check if an expression is allowed in following (')
+     */
     pub fn check_time(&self, model: &Model) -> Result<(), Error> {
         match self.expression() {
             Expression::Bool(_) => Ok(()),
@@ -70,7 +73,7 @@ impl Expr {
                     Ok(())
                 }
             }
-            Expression::State(_, _) => {
+            Expression::State(_, _, _) => {
                 let message = "State expression not allowed".into();
                 let name = self.to_lang(model);
                 let position = self.position().clone();
@@ -138,6 +141,9 @@ impl Expr {
         }
     }
 
+    /**
+     * get the following expression
+     */
     pub fn get_following<'a>(&'a self) -> Option<&'a Expr> {
         match self.expression() {
             Expression::Bool(_) => None,
@@ -168,7 +174,10 @@ impl Expr {
             Expression::As(kid, _, default) => kid.get_following().or(default.get_following()),
             //
             Expression::Following(_) => Some(self),
-            Expression::State(kid, _) => kid.get_following(),
+            Expression::State(kid, _, default) => kid.get_following().or(match default {
+                Some(default) => default.get_following(),
+                None => None,
+            }),
             Expression::Scope(_, e) => e.get_following(),
             //
             Expression::IfThenElse(ce, te, list, ee) => ce
@@ -216,7 +225,10 @@ impl Expr {
             }
             Expression::As(kid, _, default) => kid.get_ltl().or(default.get_ltl()),
             Expression::Following(e) => e.get_ltl(),
-            Expression::State(e, _) => e.get_ltl(),
+            Expression::State(e, _, default) => e.get_ltl().or(match default {
+                Some(default) => default.get_ltl(),
+                None => None,
+            }),
             Expression::Scope(_, e) => e.get_ltl(),
             Expression::IfThenElse(ce, te, list, ee) => ce
                 .get_ltl()

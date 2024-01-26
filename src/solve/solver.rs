@@ -848,7 +848,19 @@ impl<'a> Solver<'a> {
             }
             //
             Expression::Following(kid) => self.to_smt(kid, state + 1),
-            Expression::State(kid, state) => self.to_smt(kid, *state),
+            Expression::State(expr, state_expr, default) => {
+                let state_index = match state_expr.state() {
+                    State::First => state_expr.shift(),
+                    State::Current => (state as isize) + state_expr.shift(),
+                    State::Last => self.transitions as isize,
+                };
+                if state_index >= 0 && state_index <= self.transitions as isize {
+                    self.to_smt(expr, state_index as usize)
+                } else {
+                    let default = default.as_ref().unwrap();
+                    self.to_smt(default, state)
+                }
+            }
             Expression::Scope(l, e) => {
                 let mut v = vec![];
                 for dec in self.model.declarations() {

@@ -38,8 +38,13 @@ impl Expr {
                 Expression::Following(e) => {
                     Expression::Following(Box::new(e.substitute(old, new))).into()
                 }
-                Expression::State(e, state) => {
-                    Expression::State(Box::new(e.substitute(old, new)), *state).into()
+                Expression::State(kid, state, default) => {
+                    let kid = kid.substitute(old, new);
+                    let default = match default {
+                        Some(default) => Some(Box::new(default.substitute(old, new))),
+                        None => None,
+                    };
+                    Expression::State(Box::new(kid), *state, default).into()
                 }
                 Expression::Scope(l, e) => {
                     let l = l.iter().map(|e| e.substitute(old, new)).collect();

@@ -351,14 +351,6 @@ ImpliesExpr: Expr = {
     OrExpr,
 };
 
-// AndExpr: Expr = {
-//     <left:AndExpr> <l:@L><op:AndOp> <right:CompExpr> => {
-//         let position = Some(Position::new(parser.file(), lookup, l));
-//         let expression = Expression::Binary(Box::new(left), op, Box::new(right));
-//         Expr::new(expression, position)
-//     },
-//     CompExpr,
-// };
 OrExpr: Expr = {
     <l:@L><e:AndExpr> <v: ("or" <AndExpr>)+> => {
         let position = Some(Position::new(parser.file(), lookup, l));
@@ -461,64 +453,6 @@ PrefixUnaryExpr: Expr = {
     IfThenElseExpr,
 };
 
-// OuExpr: Expr = NaryOpExpr<"ou", BinaryOperator::Or, EtExpr>;
-// EtExpr: Expr = NaryOpExpr<"et", BinaryOperator::And, FollowingExpr>;
-
-// NaryOpExpr<Op, o, N>: Expr = {
-//     <l:@L><e:N> <v: (Op <N>)+> => {
-//         let position = Some(Position::new(parser.file(), lookup, l));
-//         let left = e;
-//         let right = v[0].clone();
-//         let expression = Expression::Binary(Box::new(left), o, Box::new(right));
-//         Expr::new(expression, position)
-//     },
-//     N,
-// };
-
-// EtOp: BinaryOperator = {
-//     "et" => BinaryOperator::And
-// };
-// OuOp: BinaryOperator = {
-//     "ou" => BinaryOperator::Or
-// };
-
-
-// NaryExpr: Expr = {
-//     <l:@L><op:NaryOp> <v: TupleExpr> => {
-//         let position = Some(Position::new(parser.file(), lookup, l));
-//         Expr::Nary(op, v, position)
-//     },
-//     FunCallExpr,
-// };
-
-// StructExpr: Expr = {
-//     <e:StructExpr> "." <i:Identifier> <p:TupleExpr> => {
-//         let position = Some(i.position);
-//         Expr::UnresolvedMethCall(Box::new(e), i.name, p, position)
-//     },
-//     <e:StructExpr> "." <i:Identifier> => {
-//         let position = Some(i.position);
-//         Expr::UnresolvedAttribute(Box::new(e), i.name, position)
-//     },
-//     AsExpr,
-// };
-
-// AsExpr: Expr = {
-//     <e:AsExpr> <l:@L>"as" <min:Integer> ".." <max:Integer> => {
-//         let position = Position::new(parser.file(), lookup, l);
-//         Expr::AsInterval(Box::new(e), min as isize, max as isize, Some(position))
-//     },
-//     <e:AsExpr> <l:@L>"as" "Int" => {
-//         let position = Position::new(parser.file(), lookup, l);
-//         Expr::AsInt(Box::new(e), Some(position))
-//     },
-//     <e:AsExpr> <l:@L>"as" "Real" => {
-//         let position = Position::new(parser.file(), lookup, l);
-//         Expr::AsReal(Box::new(e), Some(position))
-//     },
-//     IfThenElseExpr,
-// };
-
 IfThenElseExpr: Expr = {
     <l:@L>"if" <c:Expr> "then" <t:Expr> <v:ElifExpr*> "else" <e:Expr> "end" => {
         let position = Some(Position::new(parser.file(), lookup, l));
@@ -528,18 +462,45 @@ IfThenElseExpr: Expr = {
         let expression = Expression::IfThenElse(c, t, v, e);
         Expr::new(expression, position)
     },
-    QuantifierExpr
+    PrefixLTL
 };
 ElifExpr: (Expr, Expr) = "elif" <x:Expr> "then" <y:Expr> => (x, y);
 
-QuantifierExpr: Expr = {
-    <l:@L><op:QtOperator><p:Parameters> "|" <e:Expr> "end" => {
+StateExpr: Expr = {
+   "(" <kid: Expr> <l:@L>"at" <state:ShiftStateIndex> "default" <default:Expr> ")" => {
         let position = Some(Position::new(parser.file(), lookup, l));
-        let expression = op.new(p, e);
+        let expression = Expression::State(Box::new(kid), state, Some(Box::new(default)));
         Expr::new(expression, position)
     },
-    PrefixLTL
+   "(" <kid: Expr> <l:@L>"at" <state:SimpleStateIndex> ")" => {
+        let position = Some(Position::new(parser.file(), lookup, l));
+        let expression = Expression::State(Box::new(kid), state, None);
+        Expr::new(expression, position)
+    },
+    AsExp, 
 };
+SimpleStateIndex: StateIndex = {
+    "first" => StateIndex(State::First, 0),
+    "current" => StateIndex(State::Current, 0),
+    "last" => StateIndex(State::Last, 0),
+};
+ShiftStateIndex: StateIndex = {
+    "first" "+" <i:Integer> => StateIndex(State::First, i.try_into().unwrap()),
+    "current" "+" <i:Integer> => StateIndex(State::Current, i.try_into().unwrap()),
+    "last" "+" <i:Integer> => StateIndex(State::Last, i.try_into().unwrap()),
+    "first" "-" <i:Integer> => StateIndex(State::First, (-i).try_into().unwrap()),
+    "current" "-" <i:Integer> => StateIndex(State::Current, (-i).try_into().unwrap()),
+    "last" "-" <i:Integer> => StateIndex(State::Last, (-i).try_into().unwrap()),
+};
+
+// QuantifierExpr: Expr = {
+//     <l:@L><op:QtOperator><p:Parameters> "|" <e:Expr> "end" => {
+//         let position = Some(Position::new(parser.file(), lookup, l));
+//         let expression = op.new(p, e);
+//         Expr::new(expression, position)
+//     },
+//     PrefixLTL
+// };
 
 // LTL
 PrefixLTL: Expr = {
@@ -552,13 +513,14 @@ PrefixLTL: Expr = {
 };
 
 BinaryLTL: Expr = {
-    <left:BinaryLTL> <l:@L><op:LTLBinaryOp> <right:AsExp> => {
+    <left:BinaryLTL> <l:@L><op:LTLBinaryOp> <right:StateExpr> => {
         let position = Some(Position::new(parser.file(), lookup, l));
         let expression = op.new(left, right);
         Expr::new(expression, position)
     },
-    AsExp,
+    StateExpr,
 };
+
 
 AsExp: Expr = {
     <kid: FollowingExpr> <l:@L>"as" <typ:Type> "default" <default:FollowingExpr> => {

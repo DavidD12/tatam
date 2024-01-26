@@ -33,7 +33,15 @@ impl Expr {
             }
             //
             (Expression::Following(k1), Expression::Following(k2)) => k1.is_same(k2),
-            (Expression::State(k1, s1), Expression::State(k2, s2)) => s1 == s2 && k1.is_same(k2),
+            (Expression::State(k1, s1, d1), Expression::State(k2, s2, d2)) => {
+                s1 == s2
+                    && k1.is_same(k2)
+                    && match (d1, d2) {
+                        (None, None) => true,
+                        (Some(d1), Some(d2)) => d1.is_same(d2),
+                        _ => false,
+                    }
+            }
             (Expression::Scope(l1, e1), Expression::Scope(l2, e2)) => {
                 Expr::all_same(l1, l2) && e1.is_same(e2)
             }

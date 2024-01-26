@@ -472,9 +472,13 @@ impl Expr {
                 let expression = Expression::Following(Box::new(kid));
                 Expr::new(expression, self.position().clone())
             }
-            Expression::State(kid, state) => {
+            Expression::State(kid, state, default) => {
                 let kid = kid.propagate(model);
-                let expression = Expression::State(Box::new(kid), *state);
+                let default = match default {
+                    Some(default) => Some(Box::new(default.propagate(model))),
+                    None => None,
+                };
+                let expression = Expression::State(Box::new(kid), *state, default);
                 Expr::new(expression, self.position().clone())
             }
             Expression::Scope(l, e) => {
