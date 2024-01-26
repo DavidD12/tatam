@@ -182,8 +182,8 @@ PathType: PathType = {
 
 SearchType: SearchType = {
     "solve" => SearchType::Solve,
-    "minimize" <o: Expr> "until" <b: Expr> => SearchType::Optimize{ minimize: true, objective: o, bound: b },
-    "maximize" <o: Expr> "until" <b: Expr> => SearchType::Optimize{ minimize: false, objective: o, bound: b },
+    "minimize" <o: Expr> "until" <b: Expr> => SearchType::Optimize(Optimization{ minimize: true, objective: o, bound: b }),
+    "maximize" <o: Expr> "until" <b: Expr> => SearchType::Optimize(Optimization{ minimize: false, objective: o, bound: b }),
 };
 
 TransitionNumber: TransitionNumber = "[" <min:Integer> ".." <max:Integer?> "]" => {

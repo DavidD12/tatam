@@ -1,10 +1,9 @@
-enum Position = { Home, Factory, Client }
+enum Position = { Factory, Client }
 enum Action = { Delivery, Consume}
 enum RobotState = { 
     Ready,
     MovingToFactory,
     MovingToClient,
-    MovingToHome,
     Load,
     Unload
 }
@@ -12,7 +11,6 @@ enum RobotState = {
 cst delivery_quantity: Int
 cst robot_capacity: Int
 
-cst move_to_home_duration: Int
 cst move_to_factory_duration: Int
 cst move_to_client_duration: Int
 cst load_duration: Int
@@ -28,53 +26,53 @@ var robot_boxes: Int
 var client_boxes: Int
 
 var duration: Int
+var delivery_duration: Int
 
 init Init_Cst {
-    delivery_quantity = 10 /* 30 */ and
-    robot_capacity = 6 and
+    delivery_quantity = 3 and
+    robot_capacity = 5 and
 
-    move_to_factory_duration = 5 and
-    move_to_client_duration = 10 and
-    move_to_home_duration = 15 and
+    move_to_factory_duration = 1 and
 
     load_duration = 2 and
-    unload_duration = 3
+    unload_duration = 3 
 }
 
 init Init_Var {
-    action = Consume and
+    action = Delivery and
 
-    robot_position = Home and
+    robot_position = Factory and
     robot_state = Ready and
     robot_clock = 0 and
 
-    factory_boxes = 0 and
+    factory_boxes = delivery_quantity and
     robot_boxes = 0 and
-    client_boxes = 0 and
+    client_boxes = 0
 
-    duration = 0
+    and duration = 0
+    and delivery_duration = 0
 }
 
 inv Inv {
     duration >= 0 
-    /*
-    and
-    (duration != 0) implies ((duration at next default 0) = 0)
-    */
 }
 
-trans delivery {
-    action = Consume and factory_boxes = 0 and client_boxes = 0 and robot_boxes = 0 and
-    |action, factory_boxes|(action' = Delivery and factory_boxes' = delivery_quantity)
-}
+// trans delivery {
+//     action = Consume and factory_boxes = 0 and client_boxes = 0 and robot_boxes = 0 and
+//     |action, factory_boxes|(
+//         action' = Delivery and factory_boxes' = delivery_quantity
+//     )
+// }
 
 trans consume {
     action = Delivery and client_boxes = delivery_quantity and
-    |action, client_boxes|(action' = Consume and client_boxes' = 0)
+    |action, client_boxes|(
+        action' = Consume and client_boxes' = 0
+    )
 }
 
 trans start_moving_to_factory {
-    robot_state = Ready and
+    robot_state = Ready and robot_position != Factory and robot_boxes = 0 and
     |duration, robot_state|(
         duration' = 0 and
         robot_state' = MovingToFactory
@@ -92,7 +90,7 @@ trans finish_moving_to_factory {
 }
 
 trans start_moving_to_client {
-    robot_state = Ready and
+    robot_state = Ready and robot_position != Client and robot_boxes > 0 and
     |duration, robot_state|(
         duration' = 0 and
         robot_state' = MovingToClient
@@ -100,29 +98,16 @@ trans start_moving_to_client {
 }
 trans finish_moving_to_client {
     robot_state = MovingToClient and
-    robot_clock = move_to_client_duration and
+    robot_clock = 
+        if robot_boxes <= 1 then 1
+        elif robot_boxes = 2 then 10
+        else 30
+        end
+    and
     |duration, robot_state, robot_position, robot_clock|(
         duration' = 0 and
         robot_state' = Ready and
         robot_position' = Client and
-        robot_clock' = 0
-    )
-}
-
-trans start_moving_to_home {
-    robot_state = Ready and
-    |duration, robot_state|(
-        duration' = 0 and
-        robot_state' = MovingToHome
-    )
-}
-trans finish_moving_to_home {
-    robot_state = MovingToHome and
-    robot_clock = move_to_home_duration and
-    |duration, robot_state, robot_position, robot_clock|(
-        duration' = 0 and
-        robot_state' = Ready and
-        robot_position' = Home and
         robot_clock' = 0
     )
 }
@@ -141,8 +126,9 @@ trans finish_load {
     |duration, robot_state, robot_boxes, factory_boxes, robot_clock|(
         duration' = 0 and
         robot_state' = Ready and 
-        robot_boxes' = factory_boxes min robot_capacity and
-        factory_boxes' = factory_boxes - factory_boxes min robot_capacity and
+        robot_boxes' <= (factory_boxes min robot_capacity) and
+        robot_boxes' >= 1 and
+        factory_boxes' = factory_boxes - robot_boxes' and
         robot_clock' = 0
     )
 }
@@ -169,8 +155,9 @@ trans finish_unload {
 
 trans time_duration {
     robot_state != Ready and duration = 0 and
-    |duration, robot_clock|(
+    |duration, robot_clock, delivery_duration|(
         robot_clock' = robot_clock + duration' and
+        delivery_duration' = delivery_duration + duration' and
         duration' > 0
     )
 }
@@ -200,14 +187,22 @@ inv time_constraint {
     (duration at current) > 0 implies (duration at current +1 default 0) = 0
 }
 
-init final {
-    (action = Consume at last) 
-    and (action = Delivery at first + 1 default true)
-}
+// ATTENTION: Casse le complete
+// init final {
+//     (action = Consume at last) 
+//     and (action = Delivery at first + 1 default true)
+// }
 
 // prop = F(duration != 0 and X(duration != 0))
 // prop = F(action = Delivery and F(action = Consume))
 // prop = F(robot_position = Factory)
 // prop = F(robot_state = MovingToFactory and duration > 0)
+// search[1..] truncated minimize 10 until 0
 
-search[1..] truncated solve
+// search[1..] truncated + complete minimize (delivery_duration at last) until 0
+
+prop = F(client_boxes = delivery_quantity)
+// prop = F(robot_boxes = 1 and F(client_boxes = delivery_quantity))
+
+search truncated + complete solve
+// search truncated + complete minimize (delivery_duration at last) until 0

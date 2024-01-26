@@ -11,6 +11,7 @@ pub struct Solution {
     pub loop_index: Option<usize>,
     pub cst_dec: HashMap<DeclarationId, Option<Expr>>,
     pub var_dec: HashMap<DeclarationId, Vec<Option<Expr>>>,
+    pub objective: Option<Expr>,
 }
 
 impl Solution {
@@ -66,11 +67,25 @@ impl Solution {
             }
         }
 
+        // Objective
+        let objective = match solver.model().search().search_type().optimization() {
+            Some(opt) => {
+                let opt = opt.clone();
+                let eval = solver.eval(&opt.objective, 0);
+                match eval {
+                    Some(eval) => Some(eval),
+                    None => Some(solver.eval(&opt.bound, 0).unwrap()),
+                }
+            }
+            None => None,
+        };
+
         Self {
             states: solver.states(),
             loop_index,
             cst_dec,
             var_dec,
+            objective,
         }
     }
 }
@@ -90,6 +105,11 @@ impl ToLang for Solution {
                 }
             }
         }
+
+        if let Some(objective) = &self.objective {
+            res += &format!("objective = {}\n", objective.to_lang(model));
+        }
+
         // Variables / States
         for state in 0..self.states {
             res += &format!("---------- State {} ----------\n", state);

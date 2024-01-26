@@ -1151,6 +1151,55 @@ impl<'a> Solver<'a> {
         self.set_solution(solution);
     }
 
+    //------------------------- Optimize -------------------------
+
+    pub fn add_optimization(&mut self) {
+        if let Some(optimization) = self.model.search().search_type().optimization() {
+            self.smt
+                .add_comment("---------- Optimization ----------")
+                .unwrap();
+            let objective = &optimization.objective;
+            let bound = &optimization.bound;
+            let typ = objective.get_type(self.model);
+            let sort = self.to_sort(&typ);
+            self.smt.declare_const("__objective", &sort).unwrap();
+            self.smt
+                .assert(&format!("(= __objective {})", self.to_smt(objective, 0)))
+                .unwrap();
+            if optimization.minimize {
+                self.smt
+                    .assert(&format!("(>= __objective {})", self.to_smt(bound, 0)))
+                    .unwrap();
+                self.smt.minimize("__objective").unwrap()
+            } else {
+                self.smt
+                    .assert(&format!("(<= __objective {})", self.to_smt(bound, 0)))
+                    .unwrap();
+                self.smt.maximize("__objective").unwrap()
+            }
+        }
+    }
+
+    pub fn add_best_objective_constraint(&mut self, best_objective: &Expr) {
+        if let Some(optimization) = self.model.search().search_type().optimization() {
+            if optimization.minimize {
+                self.smt
+                    .assert(&format!(
+                        "(< __objective {})",
+                        self.to_smt(best_objective, 0)
+                    ))
+                    .unwrap();
+            } else {
+                self.smt
+                    .assert(&format!(
+                        "(> __objective {})",
+                        self.to_smt(best_objective, 0)
+                    ))
+                    .unwrap();
+            }
+        }
+    }
+
     //-------------------------  -------------------------
 
     fn remove_solution(&mut self, solution: &Solution) {

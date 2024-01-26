@@ -13,7 +13,13 @@ pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> 
 
     // Solve
     match model.search().path_type() {
-        PathType::Initial => resolve_initial(&model, pretty, args),
+        PathType::Initial => {
+            if model.search().search_type().is_optimization() {
+                resolve_initial_optimize(&model, pretty, args)
+            } else {
+                resolve_initial(&model, pretty, args)
+            }
+        }
         PathType::Path {
             infinite,
             truncated,
@@ -55,16 +61,29 @@ pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> 
                     )
                 }
             } else {
-                resolve_sequence(
-                    &model,
-                    pretty,
-                    args,
-                    infinite,
-                    truncated,
-                    finite,
-                    complete,
-                    model.search().transitions(),
-                )
+                if model.search().search_type().is_optimization() {
+                    resolve_sequence_optimize(
+                        &model,
+                        pretty,
+                        args,
+                        infinite,
+                        truncated,
+                        finite,
+                        complete,
+                        model.search().transitions(),
+                    )
+                } else {
+                    resolve_sequence(
+                        &model,
+                        pretty,
+                        args,
+                        infinite,
+                        truncated,
+                        finite,
+                        complete,
+                        model.search().transitions(),
+                    )
+                }
             }
         }
     }
