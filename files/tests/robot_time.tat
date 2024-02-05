@@ -201,8 +201,10 @@ inv time_constraint {
 
 // search[1..] truncated + complete minimize (delivery_duration at last) until 0
 
-prop = F(client_boxes = delivery_quantity)
 // prop = F(robot_boxes = 1 and F(client_boxes = delivery_quantity))
+prop = F(client_boxes = delivery_quantity)
 
-search truncated + complete solve
-// search truncated + complete minimize (delivery_duration at last) until 0
+// search truncated solve
+// search[0..35] truncated minimize (delivery_duration at last) until 0
+search complete solve
+// search infinite + complete solve

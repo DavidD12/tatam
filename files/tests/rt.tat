@@ -1,0 +1,112 @@
+cst R0, R1, R2: Int
+cst bcet_0, bcet_1, bcet_2: Int
+cst wcet_0, wcet_1, wcet_2: Int
+cst ret_0, ret_1, ret_2: Int
+cst P0, P1, P2: 0..2
+
+init I_R {
+    R0 >= 0 and R1 >= 0 and R2 >= 0
+}
+
+init I_CET {
+    bcet_0 > 0 and wcet_0 > bcet_0 and
+    bcet_1 > 0 and wcet_1 > bcet_1 and
+    bcet_2 > 0 and wcet_2 > bcet_2 and
+    //
+    ret_0 >= bcet_0 and ret_0 <= wcet_0 and
+    ret_1 >= bcet_1 and ret_1 <= wcet_1 and
+    ret_2 >= bcet_2 and ret_2 <= wcet_2
+}
+
+init I_P {
+    // prio diff
+    P0 != P1 and P0 != P2 and P1 != P2
+}
+
+enum State = { Idle, Ready, Execute, Complete }
+var task_0, task_1, task_2: State
+var clock_0, clock_1, clock_2: Int
+var delta: Int
+
+init I_State {
+    task_0 = Idle and task_1 = Idle and task_2 = Idle
+}
+
+init I_clock {
+    clock_0 = 0 and clock_1 = 0 and clock_2 = 0 and 
+    delta = 0
+}
+
+// -------------------- Idle -> Ready --------------------
+
+trans Idle_to_Ready_0 {
+    task_0 = Idle and clock_0 = R0 and
+    |task_0, task_1, task_2, delta|(
+        task_0' = Ready and
+        delta' = 0
+    )
+}
+trans Idle_to_Ready_1 {
+    task_1 = Idle and clock_1 = R1 and
+    |task_1, task_1, task_2, delta|(
+        task_1' = Ready and
+        delta' = 0
+    )
+}
+trans Idle_to_Ready_2 {
+    task_2 = Idle and clock_2 = R2 and
+    |task_2, task_1, task_2, delta|(
+        task_2' = Ready and
+        delta' = 0
+    )
+}
+
+inv Inv_Idle_Ready  {
+    (task_0 = Idle and clock_0 = R0) implies (task_0 = Ready at current + 1 default true)
+    and
+    (task_1 = Idle and clock_1 = R1) implies (task_1 = Ready at current + 1 default true)
+    and
+    (task_2 = Idle and clock_2 = R2) implies (task_2 = Ready at current + 1 default true)
+}
+
+// -------------------- Ready <-> Execute --------------------
+
+trans Execute_Ready_0 {
+    task_0 = Execute and delta = 0 and
+    |taks_0, task_1, task_2|(
+        task_0' = Ready
+    )
+}
+
+trans Execute_Ready_1 {
+    task_1 = Execute and delta = 0 and
+    |taks_0, task_1, task_2|(
+        task_1' = Ready
+    )
+}
+
+trans Execute_Ready_2 {
+    task_2 = Execute and delta = 0 and
+    |taks_0, task_1, task_2|(
+        task_2' = Ready
+    )
+}
+
+inv Inv_Execute_Ready {
+    true
+}
+
+
+// -------------------- Execute -> Complete --------------------
+
+// -------------------- Time --------------------
+
+inv time_constraint {
+    (duration at current) > 0 implies (duration at current +1 default 0) = 0
+}
+
+
+prop = F(task_0 = Ready and task_1 = Ready and task_2 = Idle)
+// prop = F(task_0 = Ready)
+
+search truncated solve

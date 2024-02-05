@@ -31,6 +31,9 @@ pub use invariant::*;
 pub mod transition;
 pub use transition::*;
 
+pub mod trigger;
+pub use trigger::*;
+
 pub mod ltl_variable;
 pub use ltl_variable::*;
 

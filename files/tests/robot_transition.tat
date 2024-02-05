@@ -87,4 +87,4 @@ trans unload {
 
 prop = G(F(action = Consume))
 
-search infinite solve
+search infinite + complete solve

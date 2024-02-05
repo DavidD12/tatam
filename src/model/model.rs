@@ -17,6 +17,7 @@ pub struct Model {
     initials: Vec<Initial>,
     invariants: Vec<Invariant>,
     transitions: Vec<Transition>,
+    triggers: Vec<Trigger>,
     //
     property: Option<Expr>,
     //
@@ -37,6 +38,7 @@ impl Model {
             initials: Vec::new(),
             invariants: Vec::new(),
             transitions: Vec::new(),
+            triggers: Vec::new(),
             property: None,
             search: Search::new(
                 TransitionNumber::new(0, None),
@@ -194,6 +196,20 @@ impl Model {
         id
     }
 
+    //---------- Trigger ----------
+
+    pub fn triggers(&self) -> &Vec<Trigger> {
+        &self.triggers
+    }
+
+    pub fn add_trigger(&mut self, trigger: Trigger) -> TriggerId {
+        let id = TriggerId(self.triggers.len());
+        let mut trigger = trigger;
+        trigger.set_id(id);
+        self.triggers.push(trigger);
+        id
+    }
+
     //---------- Property ----------
 
     pub fn property(&self) -> &Option<Expr> {
@@ -319,6 +335,7 @@ impl Model {
         v.extend(self.initials.iter().map(|x| x.naming()));
         v.extend(self.invariants.iter().map(|x| x.naming()));
         v.extend(self.transitions.iter().map(|x| x.naming()));
+        v.extend(self.triggers.iter().map(|x| x.naming()));
         //
         v
     }
@@ -382,6 +399,10 @@ impl Model {
         }
         // Trans
         for x in self.transitions.iter_mut() {
+            x.resolve_type(&types)?;
+        }
+        // Trans
+        for x in self.triggers.iter_mut() {
             x.resolve_type(&types)?;
         }
         //
@@ -455,6 +476,13 @@ impl Model {
             transitions.push(y);
         }
         self.transitions = transitions;
+        // Trigger
+        let mut triggers = Vec::new();
+        for x in self.triggers.iter() {
+            let y = x.resolve_expr(self, &entries)?;
+            triggers.push(y);
+        }
+        self.triggers = triggers;
         // Property
         if let Some(phi) = &self.property {
             let phi = phi.resolve(self, &entries)?;
@@ -490,6 +518,10 @@ impl Model {
         for x in self.transitions.iter() {
             x.check_type(self)?;
         }
+        // Trigger
+        for x in self.triggers.iter() {
+            x.check_type(self)?;
+        }
         // Property
         if let Some(phi) = &self.property {
             phi.check_type(self)?;
@@ -521,6 +553,10 @@ impl Model {
         }
         // Transition
         for x in self.transitions.iter() {
+            x.check_time(self)?;
+        }
+        // Trigger
+        for x in self.triggers.iter() {
             x.check_time(self)?;
         }
         // Property
@@ -571,6 +607,13 @@ impl Model {
             transitions.push(y);
         }
         self.transitions = transitions;
+        // Trigger
+        let mut triggers = Vec::new();
+        for x in self.triggers.iter() {
+            let y = x.propagate_expr(self);
+            triggers.push(y);
+        }
+        self.triggers = triggers;
         // Property
         if let Some(phi) = &self.property {
             let phi = phi.propagate(self);
@@ -706,6 +749,10 @@ impl Model {
         for x in self.transitions.iter() {
             res.push_str(&format!("{}\n", x.to_debug(self)));
         }
+        // ----- Transition -----
+        for x in self.triggers.iter() {
+            res.push_str(&format!("{}\n", x.to_debug(self)));
+        }
         // ----- Property -----
         if let Some(phi) = &self.property {
             res.push_str(&format!("prop = {}\n", phi.to_debug(self)));
@@ -760,6 +807,10 @@ impl std::fmt::Display for Model {
         }
         // ----- Transition -----
         for x in self.transitions.iter() {
+            write!(f, "{}\n", x.to_lang(self))?;
+        }
+        // ----- Trigger -----
+        for x in self.triggers.iter() {
             write!(f, "{}\n", x.to_lang(self))?;
         }
         // ----- Property -----
@@ -874,6 +925,12 @@ impl GetFromId<InvariantId, Invariant> for Model {
 impl GetFromId<TransitionId, Transition> for Model {
     fn get(&self, id: TransitionId) -> Option<&Transition> {
         self.transitions.get(id.index())
+    }
+}
+
+impl GetFromId<TriggerId, Trigger> for Model {
+    fn get(&self, id: TriggerId) -> Option<&Trigger> {
+        self.triggers.get(id.index())
     }
 }
 

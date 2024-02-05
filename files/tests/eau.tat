@@ -1,0 +1,74 @@
+
+var bidon_8: 0..8
+var bidon_5: 0..5
+var bidon_3: 0..3
+
+init I {
+    bidon_8 = 8
+    and bidon_5 = 0 
+    and bidon_3 = 0
+}
+
+// T8 ->
+trans t_8_in_5 {
+    bidon_8 > 0 and
+    bidon_5 < 5 and
+    |bidon_8, bidon_5|(
+        bidon_8' = bidon_8 - (bidon_8 min (5 - bidon_5)) and
+        bidon_5' = bidon_5 + (bidon_8 min (5 - bidon_5)) 
+    )
+}
+
+trans t_8_in_3 {
+    bidon_8 > 0 and
+    bidon_3 < 3 and
+    |bidon_8, bidon_3|(
+        bidon_8' = bidon_8 - (bidon_8 min (3 - bidon_3)) and
+        bidon_3' = bidon_3 + (bidon_8 min (3 - bidon_3)) 
+    )
+}
+
+// T5 ->
+trans t_5_in_3 {
+    bidon_5 > 0 and
+    bidon_3 < 3 and
+    |bidon_5, bidon_3|(
+        bidon_5' = bidon_5 - (bidon_5 min (3 - bidon_3)) and
+        bidon_3' = bidon_3 + (bidon_5 min (3 - bidon_3)) 
+    )
+}
+
+trans t_5_in_8 {
+    bidon_5 > 0 and
+    bidon_8 < 8 and
+    |bidon_5, bidon_8|(
+        bidon_5' = bidon_5 - (bidon_5 min (8 - bidon_8)) and
+        bidon_8' = bidon_8 + (bidon_5 min (8 - bidon_8)) 
+    )
+}
+
+// T3 ->
+trans t_3_in_5 {
+    bidon_3 > 0 and
+    bidon_5 < 5 and
+    |bidon_3, bidon_5|(
+        bidon_3' = bidon_3 - (bidon_3 min (5 - bidon_5)) and
+        bidon_5' = bidon_5 + (bidon_3 min (5 - bidon_5)) 
+    )
+}
+
+trans t_3_in_8 {
+    bidon_3 > 0 and
+    bidon_8 < 8 and
+    |bidon_3, bidon_8|(
+        bidon_3' = bidon_3 - (bidon_3 min (8 - bidon_8)) and
+        bidon_8' = bidon_8 + (bidon_3 min (8 - bidon_8)) 
+    )
+}
+
+
+// prop = F(bidon_8 = 4) and G(bidon_3 = 0)
+// prop = F(bidon_8 + bidon_5 + bidon_3 != 8)
+
+
+search complete solve

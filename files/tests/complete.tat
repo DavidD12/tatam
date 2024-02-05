@@ -1,0 +1,13 @@
+var x: Int
+
+init I {
+    x = 0
+}
+
+trans T {
+    x > 0 and x' = x + 1
+}
+
+prop = F(x = 2)
+
+search truncated + complete solve

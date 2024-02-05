@@ -41,6 +41,7 @@ Entry: () = {
     Initial,
     Invariant,
     Transition,
+    Trigger,
 };
 
 //------------------------- Include -------------------------
@@ -126,6 +127,14 @@ Transition: () = "trans" <i:Identifier> "{" <e:Expr> "}" => {
     let position = Some(i.position.clone());
     let tr = Transition::new(i.name, e, position);
     parser.model.add_transition(tr);
+};   
+
+//------------------------- Trigger -------------------------
+
+Trigger: () = "trig" <i:Identifier> "{" <e:Expr> "}" => {
+    let position = Some(i.position.clone());
+    let tr = Trigger::new(i.name, e, position);
+    parser.model.add_trigger(tr);
 };   
 
 //------------------------- Property -------------------------

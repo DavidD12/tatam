@@ -52,7 +52,7 @@ pub fn resolve_parallel(
         // -------------------- Bound Reached --------------------
         if let Some(max) = tn.max() {
             if transitions > max {
-                pool.join();
+                // pool.join();
                 return Response::BoundReached;
             }
         }
@@ -141,7 +141,7 @@ pub fn resolve_parallel(
         }
         match msg.response {
             Some(solution) => {
-                pool.join();
+                // pool.join();
                 return solution;
             }
             _ => {
@@ -182,7 +182,7 @@ pub fn resolve_parallel_complete(
         // -------------------- Bound Reached --------------------
         if let Some(max) = tn.max() {
             if transitions > max {
-                pool.join();
+                // pool.join();
                 return Response::BoundReached;
             }
         }
@@ -216,14 +216,14 @@ pub fn resolve_parallel_complete(
 
             if let Some(max) = tn.max() {
                 if transitions > max {
-                    pool.join();
+                    // pool.join();
                     return Response::BoundReached;
                 }
             }
 
             #[cfg(debug_assertions)]
             {
-                println!(">>> execute truncated {} <<<", transitions);
+                println!(">>> execute complete {} <<<", transitions);
             }
             execute_complete(model, transitions, args, &tx, &pool);
             transitions += 1;
@@ -248,7 +248,7 @@ pub fn resolve_parallel_complete(
         }
         match msg.response {
             Some(solution) => {
-                pool.join();
+                // pool.join();
                 return solution;
             }
             _ => {

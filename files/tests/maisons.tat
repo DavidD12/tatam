@@ -1,0 +1,9 @@
+enum Nation = { Britanique, Suedois, Danois, Norvegien, Allemand }
+enum Couleur = { Rouge, Blanche, Verte, Jaune, Bleue }
+enum Animal = { Chien, Oiseau, Chat, Cheval, Poisson }
+enum Boisson = { The, Cafe, Lait, Biere, Eau }
+enum Fume = { PalMall, Dunhill, Blend, Bluemaster, Prince }
+
+enum Maison = { Maison1, Maison2, Maison3, Maison4, Maison5 }
+
+fun nation(maison: Maison): Nation

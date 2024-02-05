@@ -394,7 +394,7 @@ impl<'a> Solver<'a> {
         }
     }
 
-    //------------------------- Trans -------------------------
+    //------------------------- Transition -------------------------
 
     fn define_transitions(&mut self, state: usize) {
         let mut v = vec![];
@@ -410,6 +410,25 @@ impl<'a> Solver<'a> {
             self.smt.assert(&self.to_smt(&e, state)).unwrap();
         } else {
             self.smt.assert("false").unwrap();
+        }
+    }
+
+    //------------------------- Trigger -------------------------
+
+    fn define_triggers(&mut self, state: usize) {
+        let mut v = vec![];
+        for t in self.model.triggers() {
+            v.push(t.expr().clone());
+        }
+        let len = v.len();
+        if len == 1 {
+            let e = &v[0];
+            self.smt.assert(&self.to_smt(&e, state)).unwrap();
+        } else if len > 1 {
+            let e = Expr::and(v);
+            self.smt.assert(&self.to_smt(&e, state)).unwrap();
+        } else {
+            self.smt.assert("true").unwrap();
         }
     }
 
@@ -1009,6 +1028,14 @@ impl<'a> Solver<'a> {
             self.define_transitions(state);
         }
 
+        // Trigger
+        for state in 0..self.states() - 1 {
+            self.smt
+                .add_comment(&format!("---------- Trigger {} ----------", state))
+                .unwrap();
+            self.define_triggers(state);
+        }
+
         // LTL Variables: classical semantic until last
         for state in 0..self.states() - 1 {
             self.smt
@@ -1100,6 +1127,9 @@ impl<'a> Solver<'a> {
         self.add_last_ltl_semantic();
         // Unicity
         self.add_unicity();
+        // Prop ?
+        // TODO: next state variables must be demared but not defined !
+        self.add_property();
     }
 
     //------------------------- Truncated -------------------------
