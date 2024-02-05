@@ -1,3 +1,4 @@
+use std::cmp::Ordering::*;
 use std::sync::mpsc::channel;
 use threadpool::ThreadPool;
 
@@ -6,7 +7,7 @@ use crate::model::Model;
 use crate::search::*;
 use crate::Args;
 
-pub fn resolve_parallel(
+pub fn resolve_parallel_optimize(
     model: &Model,
     _pretty: &mut d_stuff::Pretty,
     args: &Args,
@@ -21,6 +22,7 @@ pub fn resolve_parallel(
     let (tx, rx) = channel();
 
     let mut transitions = tn.min();
+    let mut best_solution: Option<Solution> = None;
     let mut complete_ruinning = false;
     let mut running = 0;
 
@@ -38,7 +40,10 @@ pub fn resolve_parallel(
         // -------------------- Bound Reached --------------------
         if bound_reached(tn, transitions) {
             if running == 0 {
-                return Response::BoundReached;
+                match &best_solution {
+                    Some(solution) => return Response::Solution(solution.clone()),
+                    None => return Response::BoundReached,
+                }
             }
         } else {
             // -------------------- Send Jobs --------------------
@@ -132,7 +137,10 @@ pub fn resolve_parallel(
         running -= 1;
 
         match msg.response {
-            Response::NoSolution(_) => return msg.response,
+            Response::NoSolution(_) => match &best_solution {
+                Some(solution) => return Response::Solution(solution.clone()),
+                None => return Response::BoundReached,
+            },
             Response::Unknown => {
                 #[cfg(debug_assertions)]
                 {
@@ -152,106 +160,30 @@ pub fn resolve_parallel(
                     }
                 }
             }
-            Response::BoundReached => return msg.response,
-            Response::Solution(_) => return msg.response,
-        }
-    }
-}
-
-pub fn resolve_parallel_complete(
-    model: &Model,
-    _pretty: &mut d_stuff::Pretty,
-    args: &Args,
-    tn: TransitionNumber,
-    pool_size: usize,
-) -> Response {
-    let pool = ThreadPool::new(pool_size);
-    let (tx, rx) = channel();
-
-    let mut transitions = tn.min();
-    let mut running = 0;
-
-    loop {
-        // -------------------- Bound Reached --------------------
-        if bound_reached(tn, transitions) {
-            if running == 0 {
-                return Response::BoundReached;
-            }
-        } else {
-            // -------------------- Send Jobs --------------------
-            #[cfg(debug_assertions)]
-            {
-                println!(
-                    "===> running = {} | pool = {}+{} / {}",
-                    running,
-                    pool.queued_count(),
-                    pool.active_count(),
-                    pool.max_count()
-                );
-            }
-
-            while pool.queued_count() + pool.active_count() < pool.max_count() {
-                #[cfg(debug_assertions)]
-                {
-                    println!(
-                        "========================= {} transition =========================",
-                        transitions
-                    );
-                }
-
-                if args.verbose > 2 {
-                    println!(
-                        "========================= {} transition =========================",
-                        transitions
-                    );
-                }
-
-                if let Some(max) = tn.max() {
-                    if transitions > max {
-                        break;
+            Response::BoundReached => match &best_solution {
+                Some(solution) => return Response::Solution(solution.clone()),
+                None => return Response::BoundReached,
+            },
+            Response::Solution(solution) => match &best_solution {
+                Some(best) => {
+                    if model
+                        .search()
+                        .search_type()
+                        .optimization()
+                        .unwrap()
+                        .minimize
+                    {
+                        if solution.compare_objective(best) == Some(Less) {
+                            best_solution = Some(solution);
+                        }
+                    } else {
+                        if solution.compare_objective(best) == Some(Greater) {
+                            best_solution = Some(solution);
+                        }
                     }
                 }
-
-                #[cfg(debug_assertions)]
-                {
-                    println!(">>> execute complete {} <<<", transitions);
-                }
-                execute_complete(model, transitions, args, &tx, &pool);
-                transitions += 1;
-                running += 1;
-
-                #[cfg(debug_assertions)]
-                {
-                    println!(
-                        "===> running = {} | pool = {}+{} / {}",
-                        running,
-                        pool.queued_count(),
-                        pool.active_count(),
-                        pool.max_count()
-                    );
-                }
-            }
-        }
-
-        // -------------------- Read Response --------------------
-        let msg = rx.recv().unwrap();
-        #[cfg(debug_assertions)]
-        {
-            println!("------------ Response ------------",);
-            println!("request: {:?}", msg.request);
-        }
-        running -= 1;
-
-        match msg.response {
-            Response::NoSolution(_) => return msg.response,
-            Response::Unknown => {
-                #[cfg(debug_assertions)]
-                {
-                    println!("response: no solution");
-                }
-            }
-            Response::BoundReached => return msg.response,
-            Response::Solution(_) => return msg.response,
+                None => best_solution = Some(solution),
+            },
         }
     }
 }

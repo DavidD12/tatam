@@ -3,6 +3,8 @@ use crate::common::*;
 use crate::expr::*;
 use crate::model::*;
 use crate::typing::*;
+use std::cmp::Ordering;
+use std::cmp::Ordering::*;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
@@ -86,6 +88,33 @@ impl Solution {
             cst_dec,
             var_dec,
             objective,
+        }
+    }
+
+    pub fn compare_objective(&self, other: &Solution) -> Option<Ordering> {
+        match (self.objective.as_ref(), other.objective.as_ref()) {
+            (Some(x), Some(y)) => match (x.expression(), y.expression()) {
+                (Expression::Int(x), Expression::Int(y)) => {
+                    if x == y {
+                        return Some(Equal);
+                    }
+                    if x < y {
+                        return Some(Less);
+                    }
+                    return Some(Greater);
+                }
+                (Expression::Real(x), Expression::Real(y)) => {
+                    if x == y {
+                        return Some(Equal);
+                    }
+                    if x < y {
+                        return Some(Less);
+                    }
+                    return Some(Greater);
+                }
+                _ => None,
+            },
+            _ => None,
         }
     }
 }

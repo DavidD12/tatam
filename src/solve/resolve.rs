@@ -40,15 +40,16 @@ pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> 
                     println!("pool size = {}", pool_size);
                 }
                 if !truncated && !infinite && !finite && complete {
-                    resolve_parallel_complete(
+                    return resolve_parallel_complete(
                         &model,
                         pretty,
                         args,
                         model.search().transitions(),
                         pool_size,
-                    )
-                } else {
-                    resolve_parallel(
+                    );
+                }
+                if model.search().search_type().is_optimization() {
+                    return resolve_parallel_optimize(
                         &model,
                         pretty,
                         args,
@@ -58,8 +59,19 @@ pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> 
                         complete,
                         model.search().transitions(),
                         pool_size,
-                    )
+                    );
                 }
+                return resolve_parallel(
+                    &model,
+                    pretty,
+                    args,
+                    infinite,
+                    truncated,
+                    finite,
+                    complete,
+                    model.search().transitions(),
+                    pool_size,
+                );
             } else {
                 if model.search().search_type().is_optimization() {
                     resolve_sequence_optimize(
@@ -87,8 +99,6 @@ pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> 
             }
         }
     }
-    // Display solution
-    // TODO
 }
 
 pub fn log_file(log_folder: Option<String>, base: &str, k: usize) -> Option<String> {
