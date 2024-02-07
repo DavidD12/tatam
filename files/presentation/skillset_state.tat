@@ -272,7 +272,11 @@ prop = G(F(goto_state = Success))
 search infinite solve
 
 // prop = F(battery = Low) and G(not (recharge_state = Running) and not (return_to_home_state = Running))
-// infinite + complete => no solution k=6
+// search infinite + complete solve
+// => no solution k=6
+
+// search truncated solve
 // truncated => solution k=3
+
+// search finite solve
 // finite => solution k=4
-// search finite + complete solve
