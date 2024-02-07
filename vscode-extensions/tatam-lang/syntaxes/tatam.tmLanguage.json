@@ -99,7 +99,7 @@
 					"name": "keyword.control.tatam"
 				},
 				{
-					"match": "\\b(not|and|or|implies|if|then|else|elsif|end|forall|exists|sum|prod|min|max|as|default)\\b",
+					"match": "\\b(not|and|or|implies|if|then|else|elsif|end|forall|exists|sum|prod|min|max|as|default|at|first|current|last)\\b",
 					"name": "keyword.control.tatam"
 				},
 				{
