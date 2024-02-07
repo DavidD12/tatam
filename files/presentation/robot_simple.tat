@@ -1,0 +1,65 @@
+enum Position = { Factory, Client }
+
+cst delivery_quantity: Int
+cst robot_capacity: Int
+
+var robot_position: Position
+
+var factory_boxes: Int
+var robot_boxes: Int
+var client_boxes: Int
+
+init initial_state {
+    delivery_quantity = 5 and
+    robot_capacity = 3 and
+
+    robot_position = Factory and
+
+    factory_boxes = 0 and
+    robot_boxes = 0 and
+    client_boxes = 0
+}
+
+trans delivery {
+    factory_boxes = 0 and client_boxes = 0 and robot_boxes = 0 and
+    |factory_boxes|(factory_boxes' = delivery_quantity)
+}
+
+trans consume {
+    client_boxes = delivery_quantity and
+    |client_boxes|(client_boxes' = 0)
+}
+
+trans factory_to_client {
+    robot_position = Factory and
+    |robot_position|(robot_position' = Client)
+}
+
+trans client_to_factory {
+    robot_position = Client and
+    |robot_position|(robot_position' = Factory)
+}
+
+trans load {
+    robot_position = Factory and robot_boxes = 0 and factory_boxes > 0 and
+    |robot_boxes, factory_boxes|(
+        robot_boxes' = factory_boxes min robot_capacity and
+        factory_boxes' = factory_boxes - (factory_boxes min robot_capacity)
+    )
+}
+
+trans unload {
+    robot_position = Client and robot_boxes > 0 and 
+    |robot_boxes, client_boxes|(
+        robot_boxes' = 0 and
+        client_boxes' = client_boxes + robot_boxes
+    )
+}
+
+// all boxes to client
+prop = F(client_boxes = delivery_quantity)
+search truncated solve
+
+// all boxes to client loop
+// prop = G(F(client_boxes = delivery_quantity))
+// search infinite solve

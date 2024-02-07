@@ -1,0 +1,165 @@
+enum Position = { Factory, Client }
+enum RobotState = { 
+    Ready,
+    MovingToFactory,
+    MovingToClient,
+    Loading,
+    Unloading
+}
+
+cst delivery_quantity: Int
+cst robot_capacity: Int
+
+cst move_to_factory_duration: Int
+cst move_to_client_duration: Int
+cst load_duration: Int
+cst unload_duration: Int
+
+var robot_position: Position
+var robot_state: RobotState
+var robot_clock: Int
+
+var factory_boxes: Int
+var robot_boxes: Int
+var client_boxes: Int
+
+var delta: Int
+var time: Int
+
+init Init_Cst {
+    delivery_quantity = 3 and
+    robot_capacity = 5 and
+
+    move_to_factory_duration = 1 and
+    load_duration = 2 and
+    unload_duration = 3 
+}
+
+init Init_Var {
+    robot_position = Factory and
+    robot_state = Ready and
+    robot_clock = 0 and
+
+    factory_boxes = delivery_quantity and
+    robot_boxes = 0 and
+    client_boxes = 0
+
+    and delta = 0
+    and time = 0
+}
+
+inv Inv {
+    delta >= 0 
+}
+
+// trans consume {
+//     client_boxes = delivery_quantity and
+//     |client_boxes|(
+//         client_boxes' = 0
+//     )
+// }
+
+trans start_moving_to_factory {
+    robot_state = Ready and robot_position != Factory and robot_boxes = 0 and
+    |delta, robot_state|(
+        delta' = 0 and
+        robot_state' = MovingToFactory
+    )
+}
+trans finish_moving_to_factory {
+    robot_state = MovingToFactory and 
+    robot_clock = move_to_factory_duration and
+    |delta, robot_state, robot_position, robot_clock|(
+        delta' = 0 and
+        robot_state' = Ready and
+        robot_position' = Factory and
+        robot_clock' = 0
+    )
+}
+
+trans start_moving_to_client {
+    robot_state = Ready and robot_position != Client and robot_boxes > 0 and
+    |delta, robot_state|(
+        delta' = 0 and
+        robot_state' = MovingToClient
+    )
+}
+trans finish_moving_to_client {
+    robot_state = MovingToClient and
+    robot_clock = 
+        if robot_boxes <= 1 then 1
+        elif robot_boxes = 2 then 10
+        else 30
+        end
+    and
+    |delta, robot_state, robot_position, robot_clock|(
+        delta' = 0 and
+        robot_state' = Ready and
+        robot_position' = Client and
+        robot_clock' = 0
+    )
+}
+
+trans start_loading {
+    robot_state = Ready and robot_position = Factory and robot_boxes = 0 and factory_boxes > 0 and
+    |delta, robot_state|(
+        delta' = 0 and
+        robot_state' = Loading
+    )
+}
+    
+trans finish_loading {
+    robot_state = Loading and
+    robot_clock = load_duration and
+    |delta, robot_state, robot_boxes, factory_boxes, robot_clock|(
+        delta' = 0 and
+        robot_state' = Ready and 
+        robot_boxes' <= (factory_boxes min robot_capacity) and
+        robot_boxes' >= 1 and
+        factory_boxes' = factory_boxes - robot_boxes' and
+        robot_clock' = 0
+    )
+}
+
+trans start_unloading {
+    robot_state = Ready and robot_position = Client and robot_boxes > 0 and 
+    |delta, robot_state|(
+        delta' = 0 and
+        robot_state' = Unloading
+    )
+}
+
+trans finish_unloading {
+    robot_state = Unloading and
+    robot_clock = unload_duration and
+    |delta, robot_state, robot_boxes, client_boxes, robot_clock|(
+        delta' = 0 and
+        robot_state' = Ready and
+        robot_boxes' = 0 and
+        client_boxes' = client_boxes + robot_boxes and
+        robot_clock' = 0
+    )
+}
+
+trans time_duration {
+    robot_state != Ready and delta = 0 and
+    |delta, robot_clock, time|(
+        robot_clock' = robot_clock + delta' and
+        time' = time + delta' and
+        delta' > 0
+    )
+}
+
+trig time_trigger {
+    (delta > 0) implies (delta' = 0)
+}
+// inv time_constraint {
+//     (delta at current) > 0 implies (delta at current +1 default 0) = 0
+// }
+
+prop = F(client_boxes = delivery_quantity)
+
+// search truncated solve
+// Time = 35
+
+search truncated + complete minimize (time at last) until 0

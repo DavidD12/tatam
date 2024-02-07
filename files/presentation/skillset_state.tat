@@ -1,0 +1,278 @@
+// ==================== Resouces ====================
+enum Motion = { On, Off }
+enum Battery = { Normal, Low, Critical }
+
+var motion: Motion
+var battery: Battery
+
+init init_resources {
+    motion = Off and battery = Normal
+}
+
+// ==================== Validate ====================
+
+var goto_validate: Bool
+var return_to_home_validate: Bool
+var recharge_validate: Bool
+
+inv init_validate {
+    goto_validate = true and return_to_home_validate = true and recharge_validate = true
+}
+
+// ==================== Event ====================
+
+// trans event_from_normal_to_low {
+//     skillset_state = Free and battery = Normal and
+//     |skillset_state, battery|(
+//         skillset_state' = Lock and
+//         battery' = Low
+//     )
+// }
+
+// ==================== Skillset ====================
+
+enum SkillsetState = { Free, Lock }
+
+var skillset_state: SkillsetState
+
+init init_skillset {
+    skillset_state = Free
+}
+
+trans skillset_skill_invariants_propagation {
+    skillset_state = Lock and
+    if goto_state = Running and not (motion = On) then
+        |goto_state|(
+            goto_state' = InvariantFailure
+        )
+    elif goto_state = Running and not (battery != Critical) then
+        |goto_state, motion|(
+            goto_state' = InvariantFailure and motion = Off
+        )
+    elif return_to_home_state = Running and not (motion = On) then
+        |return_to_home_state|(
+            return_to_home_state' = InvariantFailure
+        )
+    elif recharge_state = Running and not (motion = Off) then
+        |recharge_state|(
+            recharge_state' = InvariantFailure
+        )
+    else
+        |skillset_state, goto_state, return_to_home_state, recharge_state|(
+            if goto_state = InvariantFailure or goto_state = Success or goto_state = Failure or goto_state = Interrupted then
+                goto_state' = Idle
+            else 
+                goto_state' = goto_state
+            end and
+            if return_to_home_state = InvariantFailure or return_to_home_state = Success or return_to_home_state = Failure or return_to_home_state = Interrupted then
+                return_to_home_state' = Idle
+            else
+                return_to_home_state' = return_to_home_state
+            end and
+            if recharge_state = InvariantFailure or recharge_state = Success or recharge_state = Failure or recharge_state = Interrupted then
+                recharge_state' = Idle
+            else
+                recharge_state' = recharge_state
+            end and
+            skillset_state' = Free
+        )
+    end
+}
+
+// let goto_result: Bool = goto_state = Success or goto_state = Failure or goto_state = Interrupted
+// let return_to_home_result: Bool = return_to_home_state = Success or return_to_home_state = Failure or return_to_home_state = Interrupted
+// let rechage_result: Bool = recharge_state = Success or recharge_state = Failure or recharge_state = Interrupted
+
+// trans skillset_skill_results_all {
+//     skillset_state = Result and 
+//     |skillset_state, goto_state, return_to_home_state, recharge_state|(
+//         if goto_state = InvariantFailure or goto_state = Success or goto_state = Failure or goto_state = Interrupted then
+//             goto_state' = Idle
+//         else 
+//             goto_state' = goto_state
+//         end and
+//         if return_to_home_state = InvariantFailure or return_to_home_state = Success or return_to_home_state = Failure or return_to_home_state = Interrupted then
+//             return_to_home_state' = Idle
+//         else
+//             return_to_home_state' = return_to_home_state
+//         end and
+//         if recharge_state = InvariantFailure or recharge_state = Success or recharge_state = Failure or recharge_state = Interrupted then
+//             recharge_state' = Idle
+//         else
+//             recharge_state' = recharge_state
+//         end and
+//         skillset_state' = Free
+//     )
+// }
+
+// ==================== Skill ====================
+
+enum SkillState = { Idle, Running, Interrupting, InvariantFailure, Success, Failure, Interrupted}
+
+var goto_state, return_to_home_state, recharge_state: SkillState
+
+init init_skills {
+    goto_state = Idle and return_to_home_state = Idle and recharge_state = Idle
+}
+
+// -------------------- Goto --------------------
+
+trans goto_idle_to_running {
+    skillset_state = Free and goto_state = Idle and
+    goto_validate and
+    battery = Normal and motion = Off and
+    |skillset_state, goto_state, motion|(
+        skillset_state' = Lock and
+        goto_state' = Running and
+        motion' = On
+    )
+}
+
+trans goto_running_to_success_arrived {
+    skillset_state = Free and goto_state = Running and 
+    |skillset_state, goto_state, motion, battery|(
+        skillset_state' = Lock and
+        goto_state' = Success and
+        motion' = Off and
+        battery' = Low
+    )
+}
+
+trans goto_running_to_success_other {
+    skillset_state = Free and goto_state = Running and
+    |skillset_state, goto_state, motion, battery|(
+        skillset_state' = Lock and
+        goto_state' = Success and
+        motion' = Off and
+        battery' = Critical
+    )
+}
+
+trans goto_running_to_failure_blocked {
+    skillset_state = Free and goto_state = Running and
+    |skillset_state, goto_state, motion, battery|(
+        skillset_state' = Lock and
+        goto_state' = Failure and
+        motion' = Off and
+        battery' = Low
+    )
+}
+
+trans goto_running_to_interrupting {
+    skillset_state = Free and goto_state = Running and
+    |goto_state|(
+        goto_state' = Interrupting
+    )
+}
+
+trans goto_interrupting_to_idle {
+    skillset_state = Free and goto_state = Interrupting and
+    |skillset_state, goto_state, motion, battery|(
+        skillset_state' = Lock and
+        goto_state' = Interrupted and
+        motion' = Off and
+        battery' = Low
+    )
+}
+
+// -------------------- Return to Home --------------------
+
+trans return_to_home_idle_to_running {
+    skillset_state = Free and return_to_home_state = Idle and
+    return_to_home_validate and
+    motion = Off and
+    |skillset_state, return_to_home_state, motion|(
+        skillset_state' = Lock and
+        return_to_home_state' = Running and
+        motion' = On
+    )
+}
+
+trans return_to_home_running_to_success_arrived {
+    skillset_state = Free and return_to_home_state = Running and
+    |skillset_state, return_to_home_state, motion|(
+        skillset_state' = Lock and
+        return_to_home_state' = Success and
+        motion' = Off
+    )
+}
+
+trans return_to_home_running_to_failure_blocked {
+    skillset_state = Free and return_to_home_state = Running and
+    |skillset_state, return_to_home_state, motion|(
+        skillset_state' = Lock and
+        return_to_home_state' = Failure and
+        motion' = Off
+    )
+}
+
+trans return_to_home_running_to_interrupting {
+    skillset_state = Free and return_to_home_state = Running and
+    |return_to_home_state|(
+        return_to_home_state' = Interrupting
+    )
+}
+
+trans return_to_home_interrupting_to_idle {
+    skillset_state = Free and return_to_home_state = Interrupting and
+    |skillset_state, return_to_home_state, motion|(
+        skillset_state' = Lock and
+        return_to_home_state' = Interrupted and
+        motion' = Off
+    )
+}
+
+// -------------------- Rechage --------------------
+
+trans recharge_idle_to_running {
+    skillset_state = Free and recharge_state = Idle and
+    recharge_validate and
+    battery != Normal and motion = Off and
+    |skillset_state, recharge_state|(
+        skillset_state' = Lock and
+        recharge_state' = Running
+    )
+}
+
+trans recharge_running_to_success_charged {
+    skillset_state = Free and recharge_state = Running and
+    |skillset_state, recharge_state, battery|(
+        skillset_state' = Lock and
+        recharge_state' = Success and
+        battery' = Normal
+    )
+}
+
+trans recharge_running_to_failure_emergency {
+    skillset_state = Free and recharge_state = Running and
+    |skillset_state, recharge_state|(
+        skillset_state' = Lock and
+        recharge_state' = Failure
+    )
+}
+
+trans recharge_running_to_interrupting {
+    skillset_state = Free and recharge_state = Running and
+    |recharge_state|(
+        recharge_state' = Interrupting
+    )
+}
+
+trans recharge_interrupting_to_idle {
+    skillset_state = Free and recharge_state = Interrupting and
+    |skillset_state, recharge_state|(
+        skillset_state' = Lock and
+        recharge_state' = Interrupted
+    )
+}
+
+// ==================== LTL ====================
+
+prop = G(F(goto_state = Success))
+search infinite solve
+
+// prop = F(battery = Low) and G(not (recharge_state = Running) and not (return_to_home_state = Running))
+// infinite + complete => no solution k=6
+// truncated => solution k=3
+// finite => solution k=4
+// search finite + complete solve

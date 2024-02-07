@@ -1,4 +1,5 @@
 use super::*;
+use crate::common::*;
 use crate::model::Model;
 use crate::search::*;
 use crate::Args;
@@ -7,7 +8,7 @@ use smt_sb::SatResult;
 
 pub fn resolve_sequence_optimize(
     model: &Model,
-    _pretty: &mut d_stuff::Pretty,
+    pretty: &mut d_stuff::Pretty,
     args: &Args,
     infinite: bool,
     truncated: bool,
@@ -39,7 +40,7 @@ pub fn resolve_sequence_optimize(
         if let Some(max) = tn.max() {
             if transitions > max {
                 match &best_solution {
-                    Some(solution) => return Response::Solution(solution.clone()),
+                    Some(solution) => return Response::BestSolution(solution.clone()),
                     None => return Response::BoundReached,
                 }
             }
@@ -78,7 +79,13 @@ pub fn resolve_sequence_optimize(
                 SatResult::Sat => {
                     let solution = Solution::from_solver(&mut solver, false);
                     solver.exit();
-                    best_solution = Some(solution);
+                    if args.verbose > 0 {
+                        best_solution = Some(solution.clone());
+                        pretty.add(Response::Solution(solution).to_entry(&model));
+                        pretty.print();
+                    } else {
+                        best_solution = Some(solution);
+                    }
                 }
             }
         }
@@ -117,7 +124,13 @@ pub fn resolve_sequence_optimize(
                 SatResult::Sat => {
                     let solution = Solution::from_solver(&mut solver, false);
                     solver.exit();
-                    best_solution = Some(solution);
+                    if args.verbose > 0 {
+                        best_solution = Some(solution.clone());
+                        pretty.add(Response::Solution(solution).to_entry(&model));
+                        pretty.print();
+                    } else {
+                        best_solution = Some(solution);
+                    }
                 }
             }
         }
@@ -216,7 +229,13 @@ pub fn resolve_sequence_optimize(
                             }
                             SatResult::Unsat => {
                                 solver.exit();
-                                best_solution = Some(solution);
+                                if args.verbose > 0 {
+                                    best_solution = Some(solution.clone());
+                                    pretty.add(Response::Solution(solution).to_entry(&model));
+                                    pretty.print();
+                                } else {
+                                    best_solution = Some(solution);
+                                }
                                 break;
                             }
                             SatResult::Sat => {
@@ -259,7 +278,7 @@ pub fn resolve_sequence_optimize(
                 SatResult::Unsat => {
                     solver.exit();
                     match &best_solution {
-                        Some(solution) => return Response::Solution(solution.clone()),
+                        Some(solution) => return Response::BestSolution(solution.clone()),
                         None => return Response::NoSolution(transitions),
                     }
                 }

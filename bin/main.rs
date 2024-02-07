@@ -25,16 +25,16 @@ fn main() {
             }
             //
             let response = resolve(&model, &mut pretty, &args);
-            pretty.add(response.to_entry(&model));
             if args.verbose > 0 {
+                pretty.add(response.to_entry(&model));
                 pretty.print();
             } else {
                 println!("{}", response.to_lang(&model));
             }
         }
         Err(e) => {
-            pretty.add(e.to_entry(&model));
             if args.verbose > 0 {
+                pretty.add(e.to_entry(&model));
                 pretty.print();
             }
         }

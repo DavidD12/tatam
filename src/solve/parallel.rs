@@ -154,6 +154,7 @@ pub fn resolve_parallel(
             }
             Response::BoundReached => return msg.response,
             Response::Solution(_) => return msg.response,
+            _ => panic!("TODO"),
         }
     }
 }
@@ -252,6 +253,7 @@ pub fn resolve_parallel_complete(
             }
             Response::BoundReached => return msg.response,
             Response::Solution(_) => return msg.response,
+            _ => panic!("TODO"),
         }
     }
 }

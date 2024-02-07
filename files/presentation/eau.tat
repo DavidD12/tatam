@@ -9,7 +9,7 @@ init I {
     and bidon_3 = 0
 }
 
-// T 8->5
+// T 8 ->
 trans t_8_in_5 {
     bidon_8 > 0 and
     bidon_5 < 5 and
@@ -28,7 +28,7 @@ trans t_8_in_3 {
     )
 }
 
-// T5 ->
+// T 5 ->
 trans t_5_in_3 {
     bidon_5 > 0 and
     bidon_3 < 3 and
@@ -47,7 +47,7 @@ trans t_5_in_8 {
     )
 }
 
-// T3 ->
+// T 3 ->
 trans t_3_in_5 {
     bidon_3 > 0 and
     bidon_5 < 5 and
@@ -65,10 +65,6 @@ trans t_3_in_8 {
         bidon_8' = bidon_8 + (bidon_3 min (8 - bidon_8)) 
     )
 }
-
-
-// prop = F(bidon_8 = 4) and G(bidon_3 = 0)
-// prop = F(bidon_8 + bidon_5 + bidon_3 != 8)
 
 prop = F(bidon_8 = 4 and bidon_5 = 4)
 

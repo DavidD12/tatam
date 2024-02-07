@@ -184,6 +184,7 @@ pub fn resolve_parallel_optimize(
                 }
                 None => best_solution = Some(solution),
             },
+            _ => panic!("TODO"),
         }
     }
 }

@@ -72,7 +72,7 @@
 					}
 				},
 				{
-					"match": "(init|inv|trans)\\s+([a-zA-Z][a-zA-Z_0-9]*)",
+					"match": "(init|inv|trans|trig)\\s+([a-zA-Z][a-zA-Z_0-9]*)",
 					"captures": {
 						"1": {
 							"name": "keyword.other.tatam"
@@ -87,7 +87,7 @@
 					"match": "-?[0-9]+(.[0-9]*)?"
 				},
 				{
-					"match": "\\b(enum|interval|cst|var|let|init|inv|trans|prop|search|solve|initial|sequence|truncated|infinite|finite|complete|maximize|minimize|until)\\b",
+					"match": "\\b(enum|interval|cst|var|let|init|inv|trans|trig|prop|search|solve|initial|sequence|truncated|infinite|finite|complete|maximize|minimize|until)\\b",
 					"name": "keyword.other.tatam"
 				},
 				{
