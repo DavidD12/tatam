@@ -1,3 +1,4 @@
+use crate::common::*;
 use std::cmp::Ordering::*;
 use std::sync::mpsc::channel;
 use threadpool::ThreadPool;
@@ -9,7 +10,7 @@ use crate::Args;
 
 pub fn resolve_parallel_optimize(
     model: &Model,
-    _pretty: &mut d_stuff::Pretty,
+    pretty: &mut d_stuff::Pretty,
     args: &Args,
     infinite: bool,
     truncated: bool,
@@ -41,8 +42,8 @@ pub fn resolve_parallel_optimize(
         if bound_reached(tn, transitions) {
             if running == 0 {
                 match &best_solution {
-                    Some(solution) => return Response::Solution(solution.clone()),
-                    None => return Response::BoundReached,
+                    Some(solution) => return Response::BestSolution(solution.clone()),
+                    None => return Response::NoSolution(transitions),
                 }
             }
         } else {
@@ -138,7 +139,7 @@ pub fn resolve_parallel_optimize(
 
         match msg.response {
             Response::NoSolution(_) => match &best_solution {
-                Some(solution) => return Response::Solution(solution.clone()),
+                Some(solution) => return Response::BestSolution(solution.clone()),
                 None => return Response::BoundReached,
             },
             Response::Unknown => {
@@ -161,7 +162,7 @@ pub fn resolve_parallel_optimize(
                 }
             }
             Response::BoundReached => match &best_solution {
-                Some(solution) => return Response::Solution(solution.clone()),
+                Some(solution) => return Response::BestSolution(solution.clone()),
                 None => return Response::BoundReached,
             },
             Response::Solution(solution) => match &best_solution {
@@ -174,11 +175,23 @@ pub fn resolve_parallel_optimize(
                         .minimize
                     {
                         if solution.compare_objective(best) == Some(Less) {
-                            best_solution = Some(solution);
+                            if args.verbose > 0 {
+                                best_solution = Some(solution.clone());
+                                pretty.add(Response::Solution(solution).to_entry(&model));
+                                pretty.print();
+                            } else {
+                                best_solution = Some(solution);
+                            }
                         }
                     } else {
                         if solution.compare_objective(best) == Some(Greater) {
-                            best_solution = Some(solution);
+                            if args.verbose > 0 {
+                                best_solution = Some(solution.clone());
+                                pretty.add(Response::Solution(solution).to_entry(&model));
+                                pretty.print();
+                            } else {
+                                best_solution = Some(solution);
+                            }
                         }
                     }
                 }
