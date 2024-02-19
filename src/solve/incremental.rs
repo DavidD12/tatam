@@ -5,7 +5,7 @@ use crate::Args;
 use crate::ToLang;
 use smt_sb::SatResult;
 
-pub fn resolve_sequence(
+pub fn resolve_incremental(
     model: &Model,
     _pretty: &mut d_stuff::Pretty,
     args: &Args,
@@ -17,6 +17,14 @@ pub fn resolve_sequence(
 ) -> Response {
     //----- Algo -----
     let mut transitions = tn.min();
+
+    let mut solver = Solver::new(
+        model,
+        log_file(args.log_folder.clone(), "incremanetal", transitions),
+    );
+    solver.create_path(transitions);
+    // solver.apply_tactic();
+    solver.push();
 
     loop {
         #[cfg(debug_assertions)]
@@ -43,15 +51,10 @@ pub fn resolve_sequence(
 
         // -------------------- Truncated --------------------
         if truncated {
-            let mut solver = Solver::new(
-                model,
-                log_file(args.log_folder.clone(), "truncated", transitions),
-            );
-
             solver
-                .add_comment(&format!("sequence truncated k={}", transitions))
+                .add_comment(&format!("incremental truncated k={}", transitions))
                 .unwrap();
-            solver.create_truncated(transitions);
+            solver.set_truncated();
 
             let result = solver.check();
 
@@ -61,7 +64,8 @@ pub fn resolve_sequence(
                     return Response::Unknown;
                 }
                 SatResult::Unsat => {
-                    solver.exit();
+                    solver.pop();
+                    solver.push();
                 }
                 SatResult::Sat => {
                     let solution = Solution::from_solver(&mut solver, false);
@@ -75,15 +79,10 @@ pub fn resolve_sequence(
         if infinite && transitions > 0 {
             // ---------- Infinite ----------
 
-            let mut solver = Solver::new(
-                model,
-                log_file(args.log_folder.clone(), "inifinite", transitions),
-            );
-
             solver
-                .add_comment(&format!("sequence infinte k={}", transitions))
+                .add_comment(&format!("incremental infinte k={}", transitions))
                 .unwrap();
-            solver.create_infinite(transitions);
+            solver.set_infinite();
 
             let result = solver.check();
 
@@ -93,7 +92,8 @@ pub fn resolve_sequence(
                     return Response::Unknown;
                 }
                 SatResult::Unsat => {
-                    solver.exit();
+                    solver.pop();
+                    solver.push();
                 }
                 SatResult::Sat => {
                     let solution = Solution::from_solver(&mut solver, false);
@@ -108,18 +108,8 @@ pub fn resolve_sequence(
             let mut solutions: Vec<Solution> = Vec::new();
 
             loop {
-                let mut solver = Solver::new(
-                    model,
-                    log_file_n(
-                        args.log_folder.clone(),
-                        "finite",
-                        transitions,
-                        solutions.len(),
-                    ),
-                );
-
                 solver
-                    .add_comment(&format!("sequence finite k={}", transitions))
+                    .add_comment(&format!("incremental finite k={}", transitions))
                     .unwrap();
                 for (i, solution) in solutions.iter().enumerate() {
                     solver
@@ -129,7 +119,7 @@ pub fn resolve_sequence(
                         .add_comment(&format!("{}", solution.to_lang(model)))
                         .unwrap();
                 }
-                solver.create_finite(transitions, &solutions);
+                solver.set_finite(&solutions);
                 let result = solver.check();
 
                 match result {
@@ -138,26 +128,16 @@ pub fn resolve_sequence(
                         return Response::Unknown;
                     }
                     SatResult::Unsat => {
-                        solver.exit();
+                        solver.pop();
+                        solver.push();
                         break;
                     }
                     SatResult::Sat => {
                         let solution = Solution::from_solver(&mut solver, true);
                         solver.exit();
 
-                        // Check if is_finite
-                        let mut solver = Solver::new(
-                            model,
-                            log_file_n(
-                                args.log_folder.clone(),
-                                "is_finite",
-                                transitions,
-                                solutions.len(),
-                            ),
-                        );
-
                         solver
-                            .add_comment(&format!("sequence check finite k={}", transitions))
+                            .add_comment(&format!("check finite k={}", transitions))
                             .unwrap();
                         for (i, solution) in solutions.iter().enumerate() {
                             solver
@@ -171,7 +151,7 @@ pub fn resolve_sequence(
                             .add_comment(&format!("current solution:\n{}", solution.to_lang(model)))
                             .unwrap();
 
-                        solver.create_finite_future(transitions + 1, &solution);
+                        solver.set_finite_future(&solution);
 
                         let result = solver.check();
 
@@ -185,7 +165,9 @@ pub fn resolve_sequence(
                                 return Response::Solution(solution);
                             }
                             SatResult::Sat => {
-                                solver.exit();
+                                solver.pop();
+                                solver.push();
+                                solver.decrement_path();
                                 solutions.push(solution);
                             }
                         }
@@ -196,15 +178,10 @@ pub fn resolve_sequence(
 
         // -------------------- Complete/Future --------------------
         if complete {
-            let mut solver = Solver::new(
-                model,
-                log_file(args.log_folder.clone(), "complete", transitions),
-            );
-
             solver
-                .add_comment(&format!("sequence future + unicity k={}", transitions))
+                .add_comment(&format!("incremental future + unicity k={}", transitions))
                 .unwrap();
-            solver.create_future(transitions);
+            solver.set_future();
 
             let result = solver.check();
 
@@ -218,12 +195,15 @@ pub fn resolve_sequence(
                     return Response::NoSolution(transitions);
                 }
                 SatResult::Sat => {
-                    solver.exit();
-                    // Display ?
+                    solver.pop();
+                    solver.push();
                 }
             }
         }
 
         transitions += 1;
+        solver.increment_path();
+        // solver.apply_tactic();
+        solver.push();
     }
 }

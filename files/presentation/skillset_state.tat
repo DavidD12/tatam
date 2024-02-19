@@ -268,8 +268,8 @@ trans recharge_interrupting_to_idle {
 
 // ==================== LTL ====================
 
-prop = G(F(goto_state = Success))
-search infinite solve
+// prop = G(F(goto_state = Success))
+// search infinite solve
 
 // prop = F(battery = Low) and G(not (recharge_state = Running) and not (return_to_home_state = Running))
 // search infinite + complete solve

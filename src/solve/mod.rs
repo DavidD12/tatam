@@ -25,6 +25,9 @@ pub use parallel::*;
 pub mod parallel_optimize;
 pub use parallel_optimize::*;
 
+pub mod incremental;
+pub use incremental::*;
+
 pub mod solver;
 pub use solver::*;
 

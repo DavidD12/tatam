@@ -57,9 +57,9 @@ trans unload {
 }
 
 // all boxes to client
-prop = F(client_boxes = delivery_quantity)
-search truncated solve
+// prop = F(client_boxes = delivery_quantity)
+// search truncated solve
 
 // all boxes to client loop
-// prop = G(F(client_boxes = delivery_quantity))
-// search infinite solve
+prop = G(F(client_boxes = delivery_quantity))
+search infinite solve

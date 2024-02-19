@@ -1045,6 +1045,48 @@ impl<'a> Solver<'a> {
         }
     }
 
+    pub fn increment_path(&mut self) {
+        self.transitions = self.transitions + 1;
+
+        let state = self.states() - 1;
+        self.smt
+            .add_comment(&format!("---------- State {} ----------", state))
+            .unwrap();
+        // Var
+        self.declare_dec_vars(state);
+        self.declare_fun_vars(state);
+        // LTL Variables
+        self.declare_ltl_non_loop_vars(state);
+
+        // Invariants
+        self.smt
+            .add_comment(&format!("---------- Invariant {} ----------", state))
+            .unwrap();
+        self.define_invariants(state);
+
+        // Transition
+        self.smt
+            .add_comment(&format!("---------- Transition {} ----------", state - 1))
+            .unwrap();
+        self.define_transitions(state - 1);
+
+        // Trigger
+        self.smt
+            .add_comment(&format!("---------- Trigger {} ----------", state - 1))
+            .unwrap();
+        self.define_triggers(state - 1);
+
+        // LTL Variables: classical semantic until last
+        self.smt
+            .add_comment(&format!("---------- LTL {} ----------", state - 1))
+            .unwrap();
+        self.define_ltl_non_loop_vars(state - 1);
+    }
+
+    pub fn decrement_path(&mut self) {
+        self.transitions = self.transitions - 1;
+    }
+
     pub fn add_unicity(&mut self) {
         for state in 1..self.states() {
             self.smt
@@ -1121,6 +1163,10 @@ impl<'a> Solver<'a> {
 
     pub fn create_future(&mut self, transitions: usize) {
         self.create_path(transitions);
+        self.set_future();
+    }
+
+    pub fn set_future(&mut self) {
         self.with_loop = false; // TODO: ????
 
         // last = LTL
@@ -1128,7 +1174,7 @@ impl<'a> Solver<'a> {
         // Unicity
         self.add_unicity();
         // Prop ?
-        // TODO: next state variables must be demared but not defined !
+        // TODO: next state variables must be declared but not defined !
         self.add_property();
     }
 
@@ -1136,6 +1182,10 @@ impl<'a> Solver<'a> {
 
     pub fn create_truncated(&mut self, transitions: usize) {
         self.create_path(transitions);
+        self.set_truncated();
+    }
+
+    pub fn set_truncated(&mut self) {
         self.with_loop = false; // TODO: ????
 
         // last = Finite
@@ -1148,7 +1198,10 @@ impl<'a> Solver<'a> {
 
     pub fn create_infinite(&mut self, transitions: usize) {
         self.create_path(transitions);
+        self.set_infinite();
+    }
 
+    pub fn set_infinite(&mut self) {
         // last = Infinite
         self.add_last_infinite_semantic();
         // Property
@@ -1160,7 +1213,10 @@ impl<'a> Solver<'a> {
     pub fn create_finite(&mut self, transitions: usize, solutions: &Vec<Solution>) {
         self.create_path(transitions);
         self.with_loop = false; // TODO: ????
+        self.set_finite(solutions);
+    }
 
+    pub fn set_finite(&mut self, solutions: &Vec<Solution>) {
         // last = Finite
         self.add_last_finite_semantic();
         // Property
@@ -1174,7 +1230,15 @@ impl<'a> Solver<'a> {
     pub fn create_finite_future(&mut self, transitions: usize, solution: &Solution) {
         self.create_path(transitions);
         self.with_loop = false; // TODO: ????
+                                // last = LTL
+        self.add_last_ltl_semantic();
+        // set solution
+        self.set_solution(solution);
+    }
 
+    pub fn set_finite_future(&mut self, solution: &Solution) {
+        self.with_loop = false; // TODO: ????
+        self.increment_path();
         // last = LTL
         self.add_last_ltl_semantic();
         // set solution
@@ -1286,14 +1350,17 @@ impl<'a> Solver<'a> {
     //------------------------- Incremental -------------------------
 
     pub fn push(&mut self) {
-        // let tactic = "(repeat (then propagate-values simplify solve-eqs))";
-        // let tactic = "(then propagate-values solve-eqs)";
-        // self.smt.apply(tactic).unwrap();
         self.smt.push().unwrap();
     }
 
     pub fn pop(&mut self) {
         self.smt.pop().unwrap();
+    }
+
+    pub fn apply_tactic(&mut self) {
+        let tactic =
+            "(repeat (then propagate-ineqs simplify propagate-values solve-eqs elim-uncnstr))";
+        self.smt.apply(tactic).unwrap();
     }
 
     //------------------------- Solve -------------------------

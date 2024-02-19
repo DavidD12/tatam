@@ -26,42 +26,8 @@ pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> 
             finite,
             complete,
         } => {
-            let threads = args.threads as usize;
-            if args.threads != 1 {
-                let num = num_cpus::get();
-                #[cfg(debug_assertions)]
-                {
-                    println!("num cpu = {}", num);
-                }
-                //
-                let pool_size = if threads == 0 { num } else { threads };
-                #[cfg(debug_assertions)]
-                {
-                    println!("pool size = {}", pool_size);
-                }
-                if !truncated && !infinite && !finite && complete {
-                    return resolve_parallel_complete(
-                        &model,
-                        pretty,
-                        args,
-                        model.search().transitions(),
-                        pool_size,
-                    );
-                }
-                if model.search().search_type().is_optimization() {
-                    return resolve_parallel_optimize(
-                        &model,
-                        pretty,
-                        args,
-                        infinite,
-                        truncated,
-                        finite,
-                        complete,
-                        model.search().transitions(),
-                        pool_size,
-                    );
-                }
-                return resolve_parallel(
+            if args.incremental {
+                resolve_incremental(
                     &model,
                     pretty,
                     args,
@@ -70,11 +36,44 @@ pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> 
                     finite,
                     complete,
                     model.search().transitions(),
-                    pool_size,
-                );
+                )
             } else {
-                if model.search().search_type().is_optimization() {
-                    resolve_sequence_optimize(
+                let threads = args.threads as usize;
+                if args.threads != 1 {
+                    let num = num_cpus::get();
+                    #[cfg(debug_assertions)]
+                    {
+                        println!("num cpu = {}", num);
+                    }
+                    //
+                    let pool_size = if threads == 0 { num } else { threads };
+                    #[cfg(debug_assertions)]
+                    {
+                        println!("pool size = {}", pool_size);
+                    }
+                    if !truncated && !infinite && !finite && complete {
+                        return resolve_parallel_complete(
+                            &model,
+                            pretty,
+                            args,
+                            model.search().transitions(),
+                            pool_size,
+                        );
+                    }
+                    if model.search().search_type().is_optimization() {
+                        return resolve_parallel_optimize(
+                            &model,
+                            pretty,
+                            args,
+                            infinite,
+                            truncated,
+                            finite,
+                            complete,
+                            model.search().transitions(),
+                            pool_size,
+                        );
+                    }
+                    return resolve_parallel(
                         &model,
                         pretty,
                         args,
@@ -83,18 +82,32 @@ pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> 
                         finite,
                         complete,
                         model.search().transitions(),
-                    )
+                        pool_size,
+                    );
                 } else {
-                    resolve_sequence(
-                        &model,
-                        pretty,
-                        args,
-                        infinite,
-                        truncated,
-                        finite,
-                        complete,
-                        model.search().transitions(),
-                    )
+                    if model.search().search_type().is_optimization() {
+                        resolve_sequence_optimize(
+                            &model,
+                            pretty,
+                            args,
+                            infinite,
+                            truncated,
+                            finite,
+                            complete,
+                            model.search().transitions(),
+                        )
+                    } else {
+                        resolve_sequence(
+                            &model,
+                            pretty,
+                            args,
+                            infinite,
+                            truncated,
+                            finite,
+                            complete,
+                            model.search().transitions(),
+                        )
+                    }
                 }
             }
         }
