@@ -16,7 +16,6 @@ use crate::typing::*;
 
 use clap::Parser;
 
-/// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[command(name = "tatam", about = "Transition And Theory Analysis Machine")]
 #[command(author, version, about, long_about = None)]

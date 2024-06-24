@@ -1366,12 +1366,23 @@ impl<'a> Solver<'a> {
     //------------------------- Solve -------------------------
 
     pub fn check(&mut self) -> SatResult {
-        self.smt
-            .add_comment("---------- Check Sat ----------")
-            .unwrap();
-        let tactic = "(then (repeat (then propagate-ineqs simplify propagate-values solve-eqs elim-uncnstr)) smt)";
-        let res = self.smt.check_sat_using(tactic).unwrap();
-        res
+        if self.model.search().search_type().optimization().is_none() {
+            self.smt
+                .add_comment("---------- Check Sat ----------")
+                .unwrap();
+            let tactic = "(then (repeat (then propagate-ineqs simplify propagate-values solve-eqs elim-uncnstr)) smt)";
+            let res = self.smt.check_sat_using(tactic).unwrap();
+            res
+        } else {
+            self.smt
+                .add_comment("---------- Check Sat (Optimize) ----------")
+                .unwrap();
+            let tactic =
+                "(repeat (then propagate-ineqs simplify propagate-values solve-eqs elim-uncnstr))";
+            self.smt.apply(tactic).unwrap();
+            let res = self.smt.check_sat().unwrap();
+            res
+        }
     }
 
     pub fn eval(&mut self, expr: &Expr, state: usize) -> Option<Expr> {
