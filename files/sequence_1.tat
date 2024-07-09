@@ -1,4 +1,4 @@
-enum E = {a b c}
+enum E = {a, b, c}
 cst x, y, z: Bool
 cst i: Int
 cst r: Real
@@ -17,4 +17,4 @@ inv invariant_constraint {
     (x or z) and vx
 }
 
-search sequence[5..10] solve
+search[5..10] truncated solve

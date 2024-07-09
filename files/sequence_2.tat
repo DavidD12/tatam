@@ -8,4 +8,4 @@ trans t {
     x != x'
 }
 
-search sequence[5..10] solve
+search[5..10] truncated solve

@@ -1370,8 +1370,9 @@ impl<'a> Solver<'a> {
             self.smt
                 .add_comment("---------- Check Sat ----------")
                 .unwrap();
-            let tactic = "(then (repeat (then propagate-ineqs simplify propagate-values solve-eqs elim-uncnstr)) smt)";
-            let res = self.smt.check_sat_using(tactic).unwrap();
+            // let tactic = "(then (repeat (then propagate-ineqs simplify propagate-values solve-eqs elim-uncnstr)) smt)";
+            // let res = self.smt.check_sat_using(tactic).unwrap();
+            let res = self.smt.check_sat().unwrap();
             res
         } else {
             self.smt

@@ -12,4 +12,4 @@ trans t2 {
     i >= 2 and i' = 1
 }
 
-search infinite[0..5] solve
+search[0..5] infinite solve

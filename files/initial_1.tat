@@ -1,4 +1,4 @@
-enum E = {a b c}
+enum E = {a, b, c}
 cst x, y, z: Bool
 cst i: Int
 cst r: Real

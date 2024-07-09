@@ -8,5 +8,5 @@ prop = F(not x)
 
 // prop = F x and not F x
 
-search infinite[0..5] solve
+search[0..5] infinite solve
 

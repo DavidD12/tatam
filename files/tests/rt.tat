@@ -101,9 +101,9 @@ inv Inv_Execute_Ready {
 
 // -------------------- Time --------------------
 
-inv time_constraint {
-    (duration at current) > 0 implies (duration at current +1 default 0) = 0
-}
+// inv time_constraint {
+//     (duration at current) > 0 implies (duration at current +1 default 0) = 0
+// }
 
 
 prop = F(task_0 = Ready and task_1 = Ready and task_2 = Idle)

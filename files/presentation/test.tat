@@ -1,7 +1,0 @@
-cst x: Int
-
-init i {
-    x > 0
-}
-
-search initial solve

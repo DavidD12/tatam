@@ -8,4 +8,4 @@ trans t {
     x != x'
 }
 
-search infinite[0..2] solve
+search[0..2] infinite solve

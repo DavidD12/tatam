@@ -275,7 +275,7 @@ trans recharge_interrupting_to_idle {
 // search infinite + complete solve
 // => no solution k=6
 
-// search truncated solve
+search truncated solve
 // truncated => solution k=3
 
 // search finite solve

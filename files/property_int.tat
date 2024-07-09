@@ -1,4 +1,4 @@
-interval I = -10000..10000
+interval I = -1000..1000
 var x: I
 
 init I0 {
@@ -6,10 +6,10 @@ init I0 {
 }
 
 trans T0 {
-    (x < 1000) and (x' = x + 1)
+    (x < 100) and (x' = x + 1)
 }
 trans T1 {
-    (x >= 1000) and (x' = 0)
+    (x >= 100) and (x' = 0)
 }
 
 prop = F(x < 1)

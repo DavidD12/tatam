@@ -1,8 +1,0 @@
-var b: Bool
-init init_b {
-    b
-}
-cst f(b: Bool): Bool
-// search infinite + complete solve
-search finite solve
-// search[1..] truncated + complete solve
