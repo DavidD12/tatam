@@ -43,6 +43,10 @@ pub fn resolve_sequence(
 
         // -------------------- Truncated --------------------
         if truncated {
+            if args.verbose > 2 {
+                println!("> truncated {} <", transitions);
+            }
+
             let mut solver = Solver::new(
                 model,
                 log_file(args.log_folder.clone(), "truncated", transitions),
@@ -73,7 +77,9 @@ pub fn resolve_sequence(
 
         // -------------------- Infinite --------------------
         if infinite && transitions > 0 {
-            // ---------- Infinite ----------
+            if args.verbose > 2 {
+                println!("> infinite {} <", transitions);
+            }
 
             let mut solver = Solver::new(
                 model,
@@ -108,6 +114,9 @@ pub fn resolve_sequence(
             let mut solutions: Vec<Solution> = Vec::new();
 
             loop {
+                if args.verbose > 2 {
+                    println!("> finite {} <", transitions);
+                }
                 let mut solver = Solver::new(
                     model,
                     log_file_n(
@@ -146,6 +155,9 @@ pub fn resolve_sequence(
                         solver.exit();
 
                         // Check if is_finite
+                        if args.verbose > 2 {
+                            println!("> is_finite {} <", transitions);
+                        }
                         let mut solver = Solver::new(
                             model,
                             log_file_n(
@@ -196,6 +208,9 @@ pub fn resolve_sequence(
 
         // -------------------- Complete/Future --------------------
         if complete {
+            if args.verbose > 2 {
+                println!("> complete {} <", transitions);
+            }
             let mut solver = Solver::new(
                 model,
                 log_file(args.log_folder.clone(), "complete", transitions),

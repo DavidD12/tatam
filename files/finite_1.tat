@@ -42,4 +42,5 @@ trans transition_x {
 // F: true (k = 1)
 // --------------------------------------------------
 
-search truncated + complete solve
+prop = x and X (not x)
+search infinite + finite + complete solve

@@ -536,54 +536,6 @@ impl<'a> Solver<'a> {
         }
     }
 
-    // fn define_ltl_var_future(&mut self, var: &LTLVariable, state: usize) {
-    //     let v = Self::ltl_var_name(var, state);
-    //     match var.expr().expression() {
-    //         Expression::LTLunary(op, kid) => match op {
-    //             LTLUnaryOperator::X => {
-    //                 // v[s] = kid[s+1]
-    //                 let kid_next = self.to_smt(&kid, state + 1);
-    //                 let phi = format!("(= {} {})", v, kid_next);
-    //                 self.smt.assert(&phi).unwrap();
-    //             }
-    //             LTLUnaryOperator::F => {
-    //                 // v[s] = kid[s] or v[s+1]
-    //                 let kid = self.to_smt(&kid, state);
-    //                 let v_next = self.to_smt(&var.id().into(), state + 1);
-    //                 let phi = format!("(= {} (or {} {}))", v, kid, v_next);
-    //                 self.smt.assert(&phi).unwrap();
-    //             }
-    //             LTLUnaryOperator::G => {
-    //                 // v[s] = kid[s]
-    //                 let kid = self.to_smt(&kid, state);
-    //                 let phi = format!("(= {} {})", v, kid);
-    //                 self.smt.assert(&phi).unwrap();
-    //             }
-    //             LTLUnaryOperator::_F_ => panic!(),
-    //             LTLUnaryOperator::_G_ => panic!(),
-    //         },
-    //         Expression::LTLbinary(left, op, right) => match op {
-    //             LTLBinaryOperator::U => {
-    //                 // v[s] = right[s] or (left[s] and v[s+1])
-    //                 let left = self.to_smt(&left, state);
-    //                 let right = self.to_smt(&right, state);
-    //                 let v_next = self.to_smt(&var.id().into(), state + 1);
-    //                 let phi = format!("(= {} (or {} (and {} {})))", v, right, left, v_next);
-    //                 self.smt.assert(&phi).unwrap();
-    //             }
-    //             LTLBinaryOperator::R => {
-    //                 // v[s] = right[s]
-    //                 let right = self.to_smt(&right, state);
-    //                 let phi = format!("(= {} {})", v, right);
-    //                 self.smt.assert(&phi).unwrap();
-    //             }
-    //             LTLBinaryOperator::_U_ => panic!(),
-    //             LTLBinaryOperator::_R_ => panic!(),
-    //         },
-    //         _ => panic!(),
-    //     }
-    // }
-
     fn define_ltl_var_finite(&mut self, var: &LTLVariable, state: usize) {
         let v = Self::ltl_var_name(var, state);
         match var.expr().expression() {
@@ -743,14 +695,6 @@ impl<'a> Solver<'a> {
         }
     }
 
-    // fn define_ltl_vars_future(&mut self, state: usize) {
-    //     for v in self.model.ltl_variables().iter() {
-    //         if !v.is_loop() {
-    //             self.define_ltl_var_future(v, state);
-    //         }
-    //     }
-    // }
-
     fn define_ltl_vars_finite(&mut self, state: usize) {
         for v in self.model.ltl_variables().iter() {
             if !v.is_loop() {
@@ -777,7 +721,6 @@ impl<'a> Solver<'a> {
             let e = self.to_smt(&expr, 0);
             self.smt.assert(&e).unwrap();
         }
-        // TODO: add path semantic: finite/truncated/sequence or loop
     }
 
     //------------------------- Expr -------------------------
@@ -1167,14 +1110,10 @@ impl<'a> Solver<'a> {
     }
 
     pub fn set_future(&mut self) {
-        self.with_loop = false; // TODO: ????
-
-        // last = LTL
-        self.add_last_ltl_semantic();
+        self.with_loop = false;
         // Unicity
         self.add_unicity();
-        // Prop ?
-        // TODO: next state variables must be declared but not defined !
+        // Property
         self.add_property();
     }
 
@@ -1186,8 +1125,7 @@ impl<'a> Solver<'a> {
     }
 
     pub fn set_truncated(&mut self) {
-        self.with_loop = false; // TODO: ????
-
+        self.with_loop = false;
         // last = Finite
         self.add_last_finite_semantic();
         // Property
@@ -1212,11 +1150,11 @@ impl<'a> Solver<'a> {
 
     pub fn create_finite(&mut self, transitions: usize, solutions: &Vec<Solution>) {
         self.create_path(transitions);
-        self.with_loop = false; // TODO: ????
         self.set_finite(solutions);
     }
 
     pub fn set_finite(&mut self, solutions: &Vec<Solution>) {
+        self.with_loop = false;
         // last = Finite
         self.add_last_finite_semantic();
         // Property
@@ -1229,20 +1167,15 @@ impl<'a> Solver<'a> {
 
     pub fn create_finite_future(&mut self, transitions: usize, solution: &Solution) {
         self.create_path(transitions);
-        self.with_loop = false; // TODO: ????
-                                // last = LTL
-        self.add_last_ltl_semantic();
-        // set solution
-        self.set_solution(solution);
+        self.set_finite_future(solution);
     }
 
     pub fn set_finite_future(&mut self, solution: &Solution) {
-        self.with_loop = false; // TODO: ????
-        self.increment_path();
-        // last = LTL
-        self.add_last_ltl_semantic();
+        self.with_loop = false;
         // set solution
         self.set_solution(solution);
+        // Property
+        self.add_property();
     }
 
     //------------------------- Optimize -------------------------
