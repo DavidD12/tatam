@@ -2,19 +2,25 @@ Transition And Theory Analysis Machine
 
 # Install
 
-1. Install Rust: [Rust](https://www.rust-lang.org)
-2. Install [z3](https://github.com/Z3Prover/z3)
+## Install Rust: [Rust](https://www.rust-lang.org)
+## Install [z3](https://github.com/Z3Prover/z3)
 
-## Ubuntu
+### Ubuntu
 
-```console
-xxx@XXX:~$ sudo apt install z3
+```shell
+sudo apt install z3
 ```
 
-3. Install tatam:
+## Install Tatam
+```shell
+cargo install tatam
+```
 
-```console
-xxx@XXX:~$ cargo install tatam
+## Install Vscode extension [tatam-lang](https://github.com/DavidD12/tatam-lang)
+
+```shell
+cd ~/.vscode/extensions
+git clone https://github.com/DavidD12/tatam-lang.git
 ```
 
 # Example
@@ -42,5 +48,8 @@ trans tr_loop {
 prop = G(F (y = 1))
 
 search infinite solve
-
 ```
+
+# Documentation
+
+Documentation can be found [here](docs/documentation.md)
