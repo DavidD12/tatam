@@ -2,7 +2,7 @@ Transition And Theory Analysis Machine
 
 # Install
 
-## Install Rust: [Rust](https://www.rust-lang.org)
+## Install [Rust](https://www.rust-lang.org)
 ## Install [z3](https://github.com/Z3Prover/z3)
 
 ### Ubuntu
@@ -49,6 +49,13 @@ prop = G(F (y = 1))
 
 search infinite solve
 ```
+
+# Run
+
+```shell
+tatam -f file.tat
+```
+
 
 # Documentation
 

@@ -1,0 +1,28 @@
+var b: Bool
+cst x, y: Int
+var i: Int
+
+init first_init_constraint {
+    b and i = 0
+}
+init second_init_constraint {
+    x > 0 or y > 0
+}
+
+inv one_invariant {
+    i >= 0
+}
+inv other_invariant {
+    x > 0 implies b
+}
+
+trans first_transition {
+    (i < 10) and (i' = i+ 1)
+}
+trans second_transition {
+    i >= 10 and i' = 0
+}
+
+prop = G F (i = 0)
+
+search infinite + complete solve
