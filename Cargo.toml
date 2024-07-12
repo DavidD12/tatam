@@ -1,6 +1,6 @@
 [package]
 name = "tatam"
-version = "0.3.8"
+version = "0.3.9"
 edition = "2021"
 authors = ["David Doose <David.Doose@gmail.com>"]
 license = "LGPL-3.0-only"
