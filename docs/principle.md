@@ -1,11 +1,11 @@
-Un système de transition en Tatam est spécifié à l'aide de différents éléments :
+A transition system in **Tatam** is specified using various elements:
 
-1. des variables et constantes
-2. un état initial
-3. des invariants
-4. des transitions et des triggers
-5. une formule LTL
-6. une recherche
+1. variables and constants
+2. an initial state
+3. invariants
+4. transitions and triggers
+5. LTL formula
+6. a search
 
 # Variables and constants
 Variables and constants are defined by a unique name and have a type. Variables can change value with each state of the transition system. Constants, on the other hand, have a value that does not change. Variable declarations are preceded by the keyword *var*, while constants are preceded by the keyword *cst*. The order of declaration is irrelevant.
