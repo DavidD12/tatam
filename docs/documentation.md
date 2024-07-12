@@ -4,6 +4,7 @@
 - its ability to prove analysis termination (maximum size in number of transitions),
 - the ability to optimize the solution.
 
-1. [principle](principle.md)
-2. [syntax](syntax.md)
-3. [options](options.md)
+1. [Principle](principle.md)
+2. [Language Syntax](syntax.md)
+3. [Solver Options](options.md)
+4. [Advanced topics](advanced.md)
