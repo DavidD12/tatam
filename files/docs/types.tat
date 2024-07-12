@@ -1,0 +1,17 @@
+enum E = {A, B, C}
+interval I = 10..1000
+
+var b: Bool
+var e: E
+var i: Int
+var j: I
+
+init my_init {
+    b = true and
+    e = B and
+    i = j
+}
+
+prop = F (e = B)
+
+search truncated solve

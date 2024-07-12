@@ -6,5 +6,4 @@
 
 1. [principle](principle.md)
 2. [syntax](syntax.md)
-3. [search](search.md)
-4. [options](options.md)
+3. [options](options.md)
