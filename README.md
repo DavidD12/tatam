@@ -1,29 +1,27 @@
-Transition And Theory Analysis Machine
+# Transition And Theory Analysis Machine
 
-# Install
+## Install
 
-## Install [Rust](https://www.rust-lang.org)
-## Install [z3](https://github.com/Z3Prover/z3)
-
-### Ubuntu
+- Install [Rust](https://www.rust-lang.org)
+- Install [z3](https://github.com/Z3Prover/z3)
 
 ```shell
 sudo apt install z3
 ```
 
-## Install Tatam
+- Install Tatam
 ```shell
 cargo install tatam
 ```
 
-## Install Vscode extension [tatam-lang](https://github.com/DavidD12/tatam-lang)
+### Install Vscode extension [tatam-lang](https://github.com/DavidD12/tatam-lang) (Optional)
 
 ```shell
 cd ~/.vscode/extensions
 git clone https://github.com/DavidD12/tatam-lang.git
 ```
 
-# Example
+## Example
 
 ```
 cst x: Int
@@ -50,13 +48,13 @@ prop = G(F (y = 1))
 search infinite solve
 ```
 
-# Run
+## Execute
 
 ```shell
 tatam -f file.tat
 ```
 
 
-# Documentation
+## Documentation
 
-Documentation can be found [here](docs/documentation.md)
+Some documentation can be found [here](docs/documentation.md)

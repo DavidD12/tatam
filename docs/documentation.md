@@ -5,6 +5,6 @@
 - the ability to optimize the solution.
 
 1. [Principle](principle.md)
-2. [Language Syntax](syntax.md)
-3. [Solver Options](options.md)
+2. [Language syntax](syntax.md)
+3. [Solver options](options.md)
 4. [Advanced topics](advanced.md)
