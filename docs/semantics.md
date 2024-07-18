@@ -5,5 +5,5 @@ We then define an LTL formula and ask the tool to exhibit a trace of the model t
 Finally, we specify the kind(s) of traces that we consider in the analysis: <tt>infinite</tt>, <tt>truncated</tt>, <tt>finite</tt> or any combination of the three kinds. For instance, if we want to consider maximal finite traces, we can specify <tt>infinite + finite</tt>. Additionally, we can specify bounds on the trace length: <tt>search[1..20]</tt> means we only search for traces of length $k\in 1..20$. If no bound is specified, the search will go on for any $k\in \mathbb{N}$ until a trace is found or a completeness threshold is reached. To check whether a completeness threshold has been reached for each new length $k$, we use the keyword <tt>complete</tt>. Notice that if there is no trace satisfying the formula and if <tt>complete</tt> is not specified, then the analysis obviously does not stop.
 
 <div style="text-align: center;">
-    ![exmaple](img/example.png)
+    <img src="img/example.png" alt="simple example" />
 </div>
