@@ -1,0 +1,35 @@
+var x, y: Bool
+
+init I {
+    x and not y
+}
+
+trans T0 {
+    x and not y and x' and not y'
+}
+trans T1 {
+    x and not y and x' and y'
+}
+trans T2 {
+    x and y and not x' and y'
+}
+
+//
+// prop = G (x and not y)
+// search infinite + complete solve // true (2)
+// search truncated + complete solve // true (1)
+// search finite + complete solve // false (1)
+// search infinite + finite + complete solve // true (2)
+
+
+// prop = G (F (x and y))
+// search infinite + complete solve // false (0)
+// search truncated + complete solve // true (2)
+// search finite + complete solve // false (3)
+// search infinite + finite + complete solve // false (3)
+
+prop = F (not x)
+// search infinite + complete solve // false (3)
+// search truncated + complete solve // true (3)
+// search finite + complete solve // true (3)
+search infinite + finite + complete solve // true (3)

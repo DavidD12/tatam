@@ -1,0 +1,119 @@
+
+var in_0_0 : Bool
+var out_0_0 : Bool
+var in_0_1 : Bool
+var out_0_1 : Bool
+var in_0_2 : Bool
+var out_0_2 : Bool
+
+var in_1_0 : Bool
+var out_1_0 : Bool
+var in_1_1 : Bool
+var out_1_1 : Bool
+var in_1_2 : Bool
+var out_1_2 : Bool
+
+var in_2_0 : Bool
+var out_2_0 : Bool
+var in_2_1 : Bool
+var out_2_1 : Bool
+var in_2_2 : Bool
+var out_2_2 : Bool
+init I {
+
+    not in_0_0 and
+    out_0_0 and
+    not in_0_1 and
+    not out_0_1 and
+    not in_0_2 and
+    not out_0_2 and
+
+    not in_1_0 and
+    not out_1_0 and
+    not in_1_1 and
+    out_1_1 and
+    not in_1_2 and
+    not out_1_2 and
+
+    not in_2_0 and
+    not out_2_0 and
+    not in_2_1 and
+    not out_2_1 and
+    not in_2_2 and
+    out_2_2 and
+
+    true
+
+}
+
+// ---------- Node 0 ----------
+
+trans T_0_0_read {
+    in_0_0 and not out_0_0 and 
+    |in_0_0, out_0_0|(not in_0_0' and out_0_0')
+}
+trans T_0_1_read {
+    in_0_1 and not out_0_1 and 
+    |in_0_1, out_0_1|(not in_0_1' and out_0_1')
+}
+trans T_0_2_read {
+    in_0_2 and not out_0_2 and 
+    |in_0_2, out_0_2|(not in_0_2' and out_0_2')
+}
+trans T_0_0_send {
+    out_0_0 and not in_1_0 and 
+    |out_0_0, in_1_0|(not out_0_0' and in_1_0')
+}
+trans T_0_1_send {
+    out_0_1 and not in_1_1 and 
+    |out_0_1, in_1_1|(not out_0_1' and in_1_1')
+}
+trans T_0_2_send {
+    out_0_2 and not in_1_2 and 
+    |out_0_2, in_1_2|(not out_0_2' and in_1_2')
+}
+
+// ---------- Node 1 ----------
+
+trans T_1_0_read {
+    in_1_0 and not out_1_0 and 
+    |in_1_0, out_1_0|(not in_1_0' and out_1_0')
+}
+trans T_1_1_read {
+    in_1_1 and not out_1_1 and 
+    |in_1_1, out_1_1|(not in_1_1' and out_1_1')
+}
+trans T_1_2_read {
+    in_1_2 and not out_1_2 and 
+    |in_1_2, out_1_2|(not in_1_2' and out_1_2')
+}
+trans T_1_1_send {
+    out_1_1 and not in_2_1 and 
+    |out_1_1, in_2_1|(not out_1_1' and in_2_1')
+}
+trans T_1_2_send {
+    out_1_2 and not in_2_2 and 
+    |out_1_2, in_2_2|(not out_1_2' and in_2_2')
+}
+
+// ---------- Node 2 ----------
+
+trans T_2_0_read {
+    in_2_0 and not out_2_0 and 
+    |in_2_0, out_2_0|(not in_2_0' and out_2_0')
+}
+trans T_2_1_read {
+    in_2_1 and not out_2_1 and 
+    |in_2_1, out_2_1|(not in_2_1' and out_2_1')
+}
+trans T_2_2_read {
+    in_2_2 and not out_2_2 and 
+    |in_2_2, out_2_2|(not in_2_2' and out_2_2')
+}
+trans T_2_2_send {
+    out_2_2 and not in_0_2 and 
+    |out_2_2, in_0_2|(not out_2_2' and in_0_2')
+}
+
+prop = F (false or in_0_0 or in_1_1 or in_2_2)
+search infinite solve

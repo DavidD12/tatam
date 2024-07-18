@@ -57,4 +57,4 @@ tatam -f file.tat
 
 ## Documentation
 
-Some documentation can be found [here](docs/documentation.md)
+Some documentation can be found [here](https://github.com/DavidD12/tatam/blob/main/docs/documentation.md)

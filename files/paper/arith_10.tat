@@ -1,0 +1,17 @@
+cst r: Int
+var n, u, s: Int
+init I {
+    n = 0 and r > 0 and
+    u = 0 and s = 0
+}
+trans step {
+    if n = 10 and s = 165 then
+        n' = 0 and
+        u' = 0 and
+        s' = 0
+    else
+        n' = n + 1 and
+        u' = u + r and
+        s' = s + u'
+    end
+}
