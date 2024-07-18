@@ -43,8 +43,9 @@ The complete version with the different properties can be found [here](../files/
 
 The following table shows some other LTL semantics differences :
 
-|                   | infinite | truncated | finite | infinite + finite |
-| ----------------- | :------: | :-------: | :----: | :---------------: |
-| $G (x~and~not~y)$ |  $\top$  |  $\top$   | $\bot$ |      $\top$       |
-| $G F (x~and~y)$   |  $\bot$  |  $\top$   | $\bot$ |      $\bot$       |
-| $F (not~x) $      |  $\bot$  |  $\top$   | $\top$ |      $\top$       |
+|                       | infinite | truncated | finite | infinite + finite |
+| --------------------- | :------: | :-------: | :----: | :---------------: |
+| $G (x \land \lnot y)$ |  $\top$  |  $\top$   | $\bot$ |      $\top$       |
+| $G F (x \land y)$     |  $\bot$  |  $\top$   | $\bot$ |      $\bot$       |
+| $F (\lnot x)$         |  $\bot$  |  $\top$   | $\top$ |      $\top$       |
+
