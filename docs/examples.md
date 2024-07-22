@@ -26,7 +26,7 @@ The file [robot_time](../files/presentation/robot_time.tat) shows how to encode 
 
 ## nuXmv "inconsistent" semantics
 
-Consider the following simple state machine and the formula $G (x)$ (i.e. $ \neg F ( \neg x )$). Obviously, if we want to analyze it with the BDD or IC3 solver, the finite (or truncated) trace leading to $\neg x$ cannot be reached. But it works perfectly with the BMC solver.
+Consider the following simple state machine and the formula $G (x)$, which is equals to $\neg F ( \neg x )$. Obviously, if we want to analyze it with the BDD or IC3 solver, the finite (or truncated) trace leading to $\neg x$ cannot be reached. But it works perfectly with the BMC solver.
 
 ![example](img/nuxmv_bug.png)
 
