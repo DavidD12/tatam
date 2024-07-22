@@ -1,0 +1,15 @@
+MODULE main
+-- JUSTICE TRUE;
+VAR
+    x: boolean;
+
+INIT 
+ x = TRUE;
+
+TRANS
+    x ;
+
+LTLSPEC G x;
+LTLSPEC ! F (!x);
+LTLSPEC ! F (!x & ((X TRUE) | !(X TRUE)));
+

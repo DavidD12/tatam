@@ -1,0 +1,13 @@
+var x: Bool
+
+init I {
+    x
+}
+trans T {
+    x
+}
+
+// prop = F (not x)
+prop = F (not x and (X true or not X true))
+
+search truncated + complete solve

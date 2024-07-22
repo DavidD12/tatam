@@ -24,3 +24,18 @@ The file [robot_simple](../files/presentation/robot_simple.tat) shows how to enc
 
 The file [robot_time](../files/presentation/robot_time.tat) shows how to encode a planning problem with duration with tatam.
 
+## nuXmv "inconsistent" semantics
+
+Consider the following simple state machine and the formula $G (x)$ (i.e. $\neg F (\neg x)$). Obviously, if we want to analyze it with the BDD or IC3 solver, the finite (or truncated) trace leading to $\neg x$ cannot be reached. But it works perfectly with the BMC solver.
+
+![example](img/nuxmv_bug.png)
+
+In boolean logic, $\varphi$ is equal to $\varphi \land \top$ and $\alpha \lor \neg \alpha$ is equal to $\top$. So $\varphi \land (\alpha \lor \neg \alpha)$ is equal to $\varphi$. Now consider $\alpha = X (\top)$. So $\varphi \land (X (\top) \lor \neg X (\top))$ is equal to $\varphi$. Consequently, $\neg F (\neg x \land (X (\top) \lor \neg X (\top)))$ is equal to $\neg F (\neg x)$. But with *nuXmv* these two formulas are not equal.
+
+The *smv* file can be found [here](files/bug.smv). The command line looks like this
+```
+nuXmv -bmc bug.smv
+```
+
+We can analyze this example with *tatam*. The corresponding file can be found [here](files/nuxmv_bug.tat).
+Unlike *nuXmv*, *tatam* gives the expected results.
