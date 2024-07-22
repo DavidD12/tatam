@@ -4,9 +4,9 @@ VAR
     x: boolean;
 
 INIT 
- x = TRUE;
+    x = TRUE;
 
-TRANS
+TRANS 
     x ;
 
 LTLSPEC G x;
