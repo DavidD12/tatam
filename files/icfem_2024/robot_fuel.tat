@@ -1,0 +1,133 @@
+enum RobotState = { 
+    AtFactory,
+    AtClient,
+    ToFactory,
+    ToClient
+}
+
+cst produced_boxes: Int
+cst robot_capacity: Int
+cst robot_fuel_capacity: Int
+
+var robot_state: RobotState
+var robot_fuel: Int
+
+var factory_boxes: Int
+var robot_boxes: Int
+var client_boxes: Int
+
+init Init_Cst {
+    produced_boxes = 3 and
+    robot_capacity = 5 and
+    robot_fuel_capacity = 30
+}
+
+init Init_Var {
+    robot_state = AtFactory and
+    factory_boxes = 3 and
+    robot_boxes = 0 and
+    client_boxes = 0 and
+    robot_fuel = robot_fuel_capacity
+}
+
+inv Inv_Fuel {
+    robot_boxes >= 0 and
+    factory_boxes >= 0 and
+    client_boxes >= 0 and
+    robot_fuel >= 0
+}
+
+// ------------------------- Move To Factory -------------------------
+
+trans start_to_factory {
+    robot_state = AtClient and robot_boxes = 0 and
+    |robot_state|(
+        robot_state' = ToFactory
+    )
+}
+trans finish_to_factory {
+    robot_state = ToFactory and
+    |robot_state, robot_fuel|(
+        robot_state' = AtFactory and
+        robot_fuel' = robot_fuel - 1
+    )
+}
+
+// ------------------------- Move To Client -------------------------
+
+trans start_to_client {
+    robot_state = AtFactory and robot_boxes > 0 and
+    |robot_state|(
+        robot_state' = ToClient
+    )
+}
+trans finish_to_client {
+    robot_state = ToClient and
+    |robot_state, robot_fuel|(
+        robot_state' = AtClient and
+        robot_fuel' = robot_fuel - 
+            if robot_boxes <= 2 then 10
+            else 25
+            end
+    )
+}
+
+// ------------------------- Loading -------------------------
+
+trans loading {
+    robot_state = AtFactory and
+    |robot_boxes, factory_boxes|(
+        robot_boxes' <= (factory_boxes min robot_capacity) and
+        robot_boxes' > 0 and
+        factory_boxes' = factory_boxes - robot_boxes'
+    )
+}
+
+// ------------------------- Unloading -------------------------
+
+trans unloading {
+    robot_state = AtClient and
+    |robot_boxes, client_boxes|(
+        robot_boxes' = 0 and
+        client_boxes' = client_boxes + robot_boxes
+    )
+}
+
+// ========================= Properties =========================
+
+//--------------------------------------------------
+// Can Move to Client
+//--------------------------------------------------
+// prop = F(robot_state = ToClient)
+// search truncated solve
+
+//--------------------------------------------------
+// Client received some boxes
+//--------------------------------------------------
+// prop = F(client_boxes > 0)
+// search truncated solve
+
+//--------------------------------------------------
+// Client received boxes
+// Result: State 4, var robot_fuel: Int = 5
+//--------------------------------------------------
+// prop = F(client_boxes = produced_boxes)
+// search truncated solve
+
+//--------------------------------------------------
+// Robot blocked
+// infinite: failed
+// truncated: State 2 but wrong !
+// finite Result: State 8
+//--------------------------------------------------
+// prop = F(G(robot_state = ToClient))
+// search infinite + complete solve
+// search truncated solve
+// search finite solve
+
+//--------------------------------------------------
+// Optimal solution
+// Result: State 10, var robot_fuel: Int = 9 
+//--------------------------------------------------
+// prop = F(client_boxes = produced_boxes)
+// search truncated + complete maximize (robot_fuel at last) until robot_fuel_capacity

@@ -158,7 +158,6 @@ trig time_trigger {
 // }
 
 prop = F(client_boxes = delivery_quantity)
-
 search truncated solve
 // Time = 35
 
