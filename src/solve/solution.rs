@@ -17,9 +17,15 @@ pub struct Solution {
 }
 
 impl Solution {
-    pub fn get_default_value(typ: &Type) -> Expr {
+    pub fn get_default_value(model: &Model, typ: &Type) -> Expr {
         match typ {
-            Type::Enumerate(_) => todo!(),
+            Type::Enumerate(e) => {
+                let e = model.get(*e).unwrap();
+                let id = e.elements()[0].id();
+                let expression = Expression::EnumerateElement(id);
+                let expr = Expr::new(expression, None);
+                expr
+            }
             Type::Bool => false.into(),
             Type::Int => 0.into(),
             Type::Interval(_) => 0.into(),
@@ -40,7 +46,7 @@ impl Solution {
             let eval = solver.eval(&id.into(), 0);
             if complete && eval.is_none() {
                 let dec = solver.model().get(id).unwrap();
-                let eval = Self::get_default_value(&dec.get_type(solver.model()));
+                let eval = Self::get_default_value(solver.model(), &dec.get_type(solver.model()));
                 cst_dec.insert(id, Some(eval));
             } else {
                 cst_dec.insert(id, eval);
@@ -61,7 +67,8 @@ impl Solution {
                 let eval = solver.eval(&id.into(), state);
                 if complete && eval.is_none() {
                     let dec = solver.model().get(id).unwrap();
-                    let eval = Self::get_default_value(&dec.get_type(solver.model()));
+                    let eval =
+                        Self::get_default_value(solver.model(), &dec.get_type(solver.model()));
                     v.push(Some(eval));
                 } else {
                     v.push(eval);
