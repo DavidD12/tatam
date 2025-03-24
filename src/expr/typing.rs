@@ -234,6 +234,7 @@ impl Expr {
             Expression::Nary(op, kids) => {
                 if [NaryOperator::And, NaryOperator::Or].contains(op) {
                     for e in kids.iter() {
+                        e.check_type(model)?;
                         e.check_is_bool(model)?;
                     }
                     Ok(())
