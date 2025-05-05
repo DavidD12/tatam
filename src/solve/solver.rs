@@ -1,8 +1,12 @@
+use std::str::FromStr;
+
 use super::*;
 use crate::common::*;
 use crate::expr::*;
 use crate::model::*;
 use crate::typing::*;
+use fraction::Fraction;
+use regex::Regex;
 use smt_sb::*;
 
 pub struct Solver<'a> {
@@ -1344,7 +1348,37 @@ impl<'a> Solver<'a> {
                 }
                 crate::typing::typ::Type::Bool => eval.parse::<bool>().unwrap().into(),
                 crate::typing::typ::Type::Int => eval.parse::<i64>().unwrap().into(),
-                crate::typing::typ::Type::Real => todo!(),
+                crate::typing::typ::Type::Real => {
+                    // Signed
+                    let re = Regex::new(r"^- / (\d+)\.0 (\d+)\.0$").unwrap();
+                    if let Some(caps) = re.captures(&eval) {
+                        let numer = &caps[1];
+                        let denom = &caps[2];
+                        let numer = numer.parse::<u64>().unwrap();
+                        let denom = denom.parse::<u64>().unwrap();
+                        let f = Fraction::new_generic(fraction::Sign::Minus, numer, denom).unwrap();
+                        let expression = Expression::Real(f);
+                        let e = Expr::new(expression, None);
+                        return Some(e);
+                    }
+                    // Positive
+                    let re = Regex::new(r"^/ (\d+)\.0 (\d+)\.0$").unwrap();
+                    if let Some(caps) = re.captures(&eval) {
+                        let numer = &caps[1];
+                        let denom = &caps[2];
+                        let numer = numer.parse::<u64>().unwrap();
+                        let denom = denom.parse::<u64>().unwrap();
+                        let f = Fraction::new(numer, denom);
+                        let expression = Expression::Real(f);
+                        let e = Expr::new(expression, None);
+                        return Some(e);
+                    }
+                    // Number
+                    let f = Fraction::from_str(&eval).unwrap();
+                    let expression = Expression::Real(f);
+                    let e = Expr::new(expression, None);
+                    return Some(e);
+                }
                 crate::typing::typ::Type::IntInterval(_, _) => eval.parse::<i64>().unwrap().into(),
                 //
                 crate::typing::typ::Type::Undefined => panic!(),
