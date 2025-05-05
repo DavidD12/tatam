@@ -729,8 +729,17 @@ impl<'a> Solver<'a> {
         match expr.expression() {
             Expression::Bool(value) => format!("{}", value),
             Expression::Int(value) => format!("{}", value),
-            Expression::Real(_) => todo!(),
-
+            Expression::Real(value) => {
+                let numer = *value.numer().unwrap();
+                let denom = *value.denom().unwrap();
+                if denom == 1 {
+                    format!("{}", numer)
+                } else if numer == denom {
+                    "1".to_string()
+                } else {
+                    format!("(/ {} {})", numer, denom)
+                }
+            }
             Expression::PrefixUnary(op, kid) => match op {
                 PrefixUnaryOperator::Not => format!("(not {})", self.to_smt(kid, state)),
                 PrefixUnaryOperator::Neg => format!("(- {})", self.to_smt(kid, state)),
