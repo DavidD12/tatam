@@ -1334,9 +1334,9 @@ impl<'a> Solver<'a> {
 
     pub fn eval(&mut self, expr: &Expr, state: usize) -> Option<Expr> {
         let e = self.to_smt(expr, state).trim().to_string();
-        let eval = self.smt.eval(&e).unwrap().trim().to_string();
-        let eval = eval.replace(&['(', ')', ' '][..], "");
-        // println!("> {} = {}", e, eval);
+        let eval_init = self.smt.eval(&e).unwrap().trim().to_string();
+        let eval = eval_init.replace(&['(', ')', ' '][..], "");
+        // println!("> {} = {} {}", e, eval_init, eval);
         if e == eval {
             None
         } else {
@@ -1349,6 +1349,7 @@ impl<'a> Solver<'a> {
                 crate::typing::typ::Type::Bool => eval.parse::<bool>().unwrap().into(),
                 crate::typing::typ::Type::Int => eval.parse::<i64>().unwrap().into(),
                 crate::typing::typ::Type::Real => {
+                    let eval = eval_init.replace(&['(', ')'][..], "");
                     // Signed
                     let re = Regex::new(r"^- / (\d+)\.0 (\d+)\.0$").unwrap();
                     if let Some(caps) = re.captures(&eval) {
