@@ -1350,7 +1350,7 @@ impl<'a> Solver<'a> {
                 crate::typing::typ::Type::Int => eval.parse::<i64>().unwrap().into(),
                 crate::typing::typ::Type::Real => {
                     let eval = eval_init.replace(&['(', ')'][..], "");
-                    // Signed
+                    // Signed Fraction
                     let re = Regex::new(r"^- / (\d+)\.0 (\d+)\.0$").unwrap();
                     if let Some(caps) = re.captures(&eval) {
                         let numer = &caps[1];
@@ -1362,7 +1362,7 @@ impl<'a> Solver<'a> {
                         let e = Expr::new(expression, None);
                         return Some(e);
                     }
-                    // Positive
+                    // Positive Fraction
                     let re = Regex::new(r"^/ (\d+)\.0 (\d+)\.0$").unwrap();
                     if let Some(caps) = re.captures(&eval) {
                         let numer = &caps[1];
@@ -1370,6 +1370,15 @@ impl<'a> Solver<'a> {
                         let numer = numer.parse::<u64>().unwrap();
                         let denom = denom.parse::<u64>().unwrap();
                         let f = Fraction::new(numer, denom);
+                        let expression = Expression::Real(f);
+                        let e = Expr::new(expression, None);
+                        return Some(e);
+                    }
+                    // Signed Number
+                    let re = Regex::new(r"^- (\d+\.\d+)$").unwrap();
+                    if let Some(caps) = re.captures(&eval) {
+                        let numer = &caps[1];
+                        let f = -Fraction::from_str(numer).unwrap();
                         let expression = Expression::Real(f);
                         let e = Expr::new(expression, None);
                         return Some(e);
