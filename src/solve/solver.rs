@@ -1335,7 +1335,7 @@ impl<'a> Solver<'a> {
     pub fn eval(&mut self, expr: &Expr, state: usize) -> Option<Expr> {
         let e = self.to_smt(expr, state).trim().to_string();
         let eval_init = self.smt.eval(&e).unwrap().trim().to_string();
-        let eval = eval_init.replace(&['(', ')', ' '][..], "");
+        let eval = eval_init.replace(&['(', ')'][..], "").trim().to_string();
         // println!("> {} = {} {}", e, eval_init, eval);
         if e == eval {
             None
