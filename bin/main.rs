@@ -18,7 +18,7 @@ fn main() {
                 pretty.print();
             }
             //
-            let response = resolve(&model, &mut pretty, &args);
+            let response = resolve(&mut model, &mut pretty, &args);
             if args.verbose > 0 {
                 pretty.add(response.to_entry(&model));
                 pretty.print();

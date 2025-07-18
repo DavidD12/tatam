@@ -22,7 +22,7 @@ impl Id for DefinitionId {
 
 //------------------------- Definition -------------------------
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Definition {
     id: DefinitionId,
     name: String,

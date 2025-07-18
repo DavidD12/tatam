@@ -14,9 +14,7 @@ trans T {
     i' = i + 1
 }
 
-// ltl phi = F(i = 10)
-// prop = phi
-
-prop = F(i = 10)
+ltl phi = F(i = 10)
+prop = phi
 
 search truncated + complete solve

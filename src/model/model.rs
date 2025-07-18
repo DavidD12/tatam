@@ -293,45 +293,51 @@ impl Model {
             self.initials.push(init);
             //
             self.property = Some(dec_id.into());
-            // -----Loop -----
-            let mut list = vec![];
-            for v in self.ltl_variables.iter() {
-                match v.expr().expression() {
-                    Expression::LTLunary(op, kid) => match op {
-                        LTLUnaryOperator::X => {}
-                        LTLUnaryOperator::F => {
-                            let e = LTLUnaryOperator::_F_.new(*kid.clone());
-                            list.push(e.into());
-                        }
-                        LTLUnaryOperator::G => {
-                            let e = LTLUnaryOperator::_G_.new(*kid.clone());
-                            list.push(e.into());
-                        }
-                        LTLUnaryOperator::_F_ => {}
-                        LTLUnaryOperator::_G_ => {}
-                    },
-                    Expression::LTLbinary(left, op, right) => match op {
-                        LTLBinaryOperator::U => {
-                            let e = LTLBinaryOperator::_U_.new(*left.clone(), *right.clone());
-                            list.push(e.into());
-                        }
-                        LTLBinaryOperator::R => {
-                            let e = LTLBinaryOperator::_U_.new(*left.clone(), *right.clone());
-                            list.push(e.into());
-                        }
-                        LTLBinaryOperator::_U_ => {}
-                        LTLBinaryOperator::_R_ => {}
-                    },
-                    _ => {}
-                }
-            }
-            for e in list {
-                self.insert_ltl_variable(e);
+        }
+
+        // LTL Definitions
+        for ltl_def in self.ltl_definitions.clone().iter() {
+            let expr = ltl_def.expr().flatten_ltl(self);
+            let def = Definition::new(ltl_def.name(), ltl_def.get_type(self).clone(), expr, None);
+            self.add_definition(def);
+        }
+
+        // -----Loop -----
+        let mut list = vec![];
+        for v in self.ltl_variables.iter() {
+            match v.expr().expression() {
+                Expression::LTLunary(op, kid) => match op {
+                    LTLUnaryOperator::X => {}
+                    LTLUnaryOperator::F => {
+                        let e = LTLUnaryOperator::_F_.new(*kid.clone());
+                        list.push(e.into());
+                    }
+                    LTLUnaryOperator::G => {
+                        let e = LTLUnaryOperator::_G_.new(*kid.clone());
+                        list.push(e.into());
+                    }
+                    LTLUnaryOperator::_F_ => {}
+                    LTLUnaryOperator::_G_ => {}
+                },
+                Expression::LTLbinary(left, op, right) => match op {
+                    LTLBinaryOperator::U => {
+                        let e = LTLBinaryOperator::_U_.new(*left.clone(), *right.clone());
+                        list.push(e.into());
+                    }
+                    LTLBinaryOperator::R => {
+                        let e = LTLBinaryOperator::_U_.new(*left.clone(), *right.clone());
+                        list.push(e.into());
+                    }
+                    LTLBinaryOperator::_U_ => {}
+                    LTLBinaryOperator::_R_ => {}
+                },
+                _ => {}
             }
         }
+        for e in list {
+            self.insert_ltl_variable(e);
+        }
     }
-
-    //========================= =========================
 
     //---------- Check Interval ----------
 

@@ -155,6 +155,8 @@ impl Solution {
 
 impl ToLang for Solution {
     fn to_lang(&self, model: &Model) -> String {
+        println!("{}", model.debug());
+
         let mut res = "".to_string();
 
         // Constantes
@@ -183,7 +185,9 @@ impl ToLang for Solution {
             }
             // Definitions
             for (id, v) in self.var_def.iter() {
+                println!("id: {:?}", id);
                 let def = model.get(*id).unwrap();
+                println!("def: {:?}", def);
                 if let Some(value) = &v[state] {
                     res += &format!("{} = {}\n", def.to_lang(model), value.to_lang(model));
                 }

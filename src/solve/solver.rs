@@ -234,15 +234,24 @@ impl<'a> Solver<'a> {
             self.smt.assert(&format!("(>= {} {})", name, min)).unwrap();
             self.smt.assert(&format!("(<= {} {})", name, max)).unwrap();
         }
-        // Definition
-        self.smt
-            .assert(&format!("(= {} {})", name, self.to_smt(&def.expr(), state)))
-            .unwrap();
     }
 
     fn declare_def_vars(&mut self, state: usize) {
         for d in self.model.definitions().iter() {
             self.declare_def_var(d, state);
+        }
+    }
+
+    fn define_def_var(&mut self, def: &Definition, state: usize) {
+        let name = Self::var_def_name(def, state);
+        self.smt
+            .assert(&format!("(= {} {})", name, self.to_smt(&def.expr(), state)))
+            .unwrap();
+    }
+
+    fn define_def_vars(&mut self, state: usize) {
+        for d in self.model.definitions().iter() {
+            self.define_def_var(d, state);
         }
     }
 
@@ -998,6 +1007,8 @@ impl<'a> Solver<'a> {
             self.declare_fun_vars(state);
             // LTL Variables
             self.declare_ltl_non_loop_vars(state);
+            // Define vars
+            self.define_def_vars(state);
         }
 
         // Init

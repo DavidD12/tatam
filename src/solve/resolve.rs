@@ -3,8 +3,8 @@ use crate::model::Model;
 use crate::search::*;
 use crate::Args;
 
-pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> Response {
-    let mut model = model.clone();
+pub fn resolve<'a>(model: &mut Model, pretty: &mut d_stuff::Pretty, args: &Args) -> Response {
+    // let mut model = model.clone();
     // Propagate
     // model.propagate_expr();
 
@@ -15,9 +15,9 @@ pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> 
     match model.search().path_type() {
         PathType::Initial => {
             if model.search().search_type().is_optimization() {
-                resolve_initial_optimize(&model, pretty, args)
+                return resolve_initial_optimize(&model, pretty, args);
             } else {
-                resolve_initial(&model, pretty, args)
+                return resolve_initial(&model, pretty, args);
             }
         }
         PathType::Path {
@@ -27,7 +27,7 @@ pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> 
             complete,
         } => {
             if args.incremental {
-                resolve_incremental(
+                return resolve_incremental(
                     &model,
                     pretty,
                     args,
@@ -36,7 +36,7 @@ pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> 
                     finite,
                     complete,
                     model.search().transitions(),
-                )
+                );
             } else {
                 let threads = args.threads as usize;
                 if args.threads != 1 {
@@ -86,7 +86,7 @@ pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> 
                     );
                 } else {
                     if model.search().search_type().is_optimization() {
-                        resolve_sequence_optimize(
+                        return resolve_sequence_optimize(
                             &model,
                             pretty,
                             args,
@@ -95,9 +95,9 @@ pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> 
                             finite,
                             complete,
                             model.search().transitions(),
-                        )
+                        );
                     } else {
-                        resolve_sequence(
+                        return resolve_sequence(
                             &model,
                             pretty,
                             args,
@@ -106,7 +106,7 @@ pub fn resolve<'a>(model: &Model, pretty: &mut d_stuff::Pretty, args: &Args) -> 
                             finite,
                             complete,
                             model.search().transitions(),
-                        )
+                        );
                     }
                 }
             }
