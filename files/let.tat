@@ -1,6 +1,6 @@
 var i: Int
 
-let x: Int = i + 2
+let x: Int = i - 2
 
 init Init {
     i = 0

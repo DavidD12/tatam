@@ -13,6 +13,7 @@ pub struct Solution {
     pub loop_index: Option<usize>,
     pub cst_dec: HashMap<DeclarationId, Option<Expr>>,
     pub var_dec: HashMap<DeclarationId, Vec<Option<Expr>>>,
+    pub var_def: HashMap<DefinitionId, Vec<Option<Expr>>>,
     pub objective: Option<Expr>,
 }
 
@@ -76,6 +77,29 @@ impl Solution {
             }
         }
 
+        // Definitions / States
+        let mut var_def = HashMap::new();
+        let list = solver.model().definition_ids();
+
+        for id in list.iter() {
+            var_def.insert(*id, vec![]);
+        }
+
+        for id in list.into_iter() {
+            let v = var_def.get_mut(&id).unwrap();
+            for state in 0..solver.states() {
+                let eval = solver.eval(&id.into(), state);
+                if complete && eval.is_none() {
+                    let def = solver.model().get(id).unwrap();
+                    let eval =
+                        Self::get_default_value(solver.model(), &def.get_type(solver.model()));
+                    v.push(Some(eval));
+                } else {
+                    v.push(eval);
+                }
+            }
+        }
+
         // Objective
         let objective = match solver.model().search().search_type().optimization() {
             Some(opt) => {
@@ -94,6 +118,7 @@ impl Solution {
             loop_index,
             cst_dec,
             var_dec,
+            var_def,
             objective,
         }
     }
@@ -146,16 +171,25 @@ impl ToLang for Solution {
             res += &format!("objective = {}\n", objective.to_lang(model));
         }
 
-        // Variables / States
+        // States
         for state in 0..self.states {
             res += &format!("---------- State {} ----------\n", state);
+            // Variables
             for (id, v) in self.var_dec.iter() {
                 let dec = model.get(*id).unwrap();
                 if let Some(value) = &v[state] {
                     res += &format!("{} = {}\n", dec.to_lang(model), value.to_lang(model));
                 }
             }
+            // Definitions
+            for (id, v) in self.var_def.iter() {
+                let def = model.get(*id).unwrap();
+                if let Some(value) = &v[state] {
+                    res += &format!("{} = {}\n", def.to_lang(model), value.to_lang(model));
+                }
+            }
         }
+
         // Loop
         match self.loop_index {
             Some(index) => res += &format!(">>>>>>>>>> Loop {} <<<<<<<<<<\n", index),

@@ -1383,7 +1383,9 @@ impl<'a> Solver<'a> {
                     Expression::EnumerateElement(element.id()).into()
                 }
                 crate::typing::typ::Type::Bool => eval.parse::<bool>().unwrap().into(),
-                crate::typing::typ::Type::Int => eval.parse::<i64>().unwrap().into(),
+                crate::typing::typ::Type::Int => {
+                    eval.replace(&[' '], "").parse::<i64>().unwrap().into()
+                }
                 crate::typing::typ::Type::Real => {
                     let eval = eval_init.replace(&['(', ')'][..], "");
                     // Signed Fraction

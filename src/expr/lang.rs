@@ -101,6 +101,19 @@ impl From<(DeclarationId, Position)> for Expr {
     }
 }
 
+//-------------------- Definition --------------------
+impl From<DefinitionId> for Expr {
+    fn from(value: DefinitionId) -> Self {
+        Expr::new(Expression::Definition(value), None)
+    }
+}
+impl From<(DefinitionId, Position)> for Expr {
+    fn from(tuple: (DefinitionId, Position)) -> Self {
+        let (value, position) = tuple;
+        Expr::new(Expression::Definition(value), Some(position))
+    }
+}
+
 //-------------------- FunDec --------------------
 impl From<FunDecId> for Expr {
     fn from(value: FunDecId) -> Self {

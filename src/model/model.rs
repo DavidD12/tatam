@@ -115,6 +115,10 @@ impl Model {
             .collect()
     }
 
+    pub fn definition_ids(&self) -> Vec<DefinitionId> {
+        self.definitions().iter().map(|d| d.id()).collect()
+    }
+
     //---------- Definition ----------
 
     pub fn definitions(&self) -> &Vec<Definition> {
