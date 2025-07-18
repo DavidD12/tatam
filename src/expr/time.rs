@@ -30,6 +30,7 @@ impl Expr {
             Expression::Definition(_) => Ok(()),
             Expression::FunDec(_) => Ok(()),
             Expression::FunDef(_) => Ok(()),
+            Expression::LtlDefinition(_) => Ok(()),
             //
             Expression::Parameter(_) => Ok(()),
             //
@@ -167,6 +168,7 @@ impl Expr {
             Expression::FunDec(_) => None,
             Expression::FunDef(_) => None,
             Expression::Parameter(_) => None,
+            Expression::LtlDefinition(_) => None,
             //
             Expression::Apply(fun, params) => fun
                 .get_following()
@@ -219,6 +221,7 @@ impl Expr {
             Expression::FunDec(_) => None,
             Expression::FunDef(_) => None,
             Expression::Parameter(_) => None,
+            Expression::LtlDefinition(_) => None,
             //
             Expression::Apply(fun, params) => {
                 fun.get_ltl().or(params.iter().find_map(|p| p.get_ltl()))

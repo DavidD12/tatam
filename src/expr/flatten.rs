@@ -23,6 +23,7 @@ impl Expr {
             Expression::FunDec(_) => self.clone(),
             Expression::FunDef(_) => self.clone(),
             Expression::Parameter(_) => self.clone(),
+            Expression::LtlDefinition(_) => self.clone(),
             //
             Expression::Apply(fun, params) => {
                 let fun = fun.flatten_ltl(model);

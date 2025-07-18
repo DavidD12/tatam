@@ -129,6 +129,7 @@ impl Expression {
             Expression::Definition(id) => model.get(*id).unwrap().get_type(model),
             Expression::FunDec(id) => model.get(*id).unwrap().get_type(model),
             Expression::FunDef(id) => model.get(*id).unwrap().get_type(model),
+            Expression::LtlDefinition(id) => model.get(*id).unwrap().get_type(model),
             //
             Expression::Parameter(param) => param.get_type(model),
             //
@@ -250,6 +251,7 @@ impl Expr {
             Expression::Definition(_) => Ok(()),
             Expression::FunDec(_) => Ok(()),
             Expression::FunDef(_) => Ok(()),
+            Expression::LtlDefinition(_) => Ok(()),
             //
             Expression::Parameter(_) => Ok(()),
             //

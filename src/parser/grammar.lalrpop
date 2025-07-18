@@ -37,6 +37,7 @@ Entry: () = {
     Definition,
     // FunDec,
     // FunDef,
+    LtlDefinition,
 
     Initial,
     Invariant,
@@ -136,6 +137,14 @@ Trigger: () = "trig" <i:Identifier> "{" <e:Expr> "}" => {
     let tr = Trigger::new(i.name, e, position);
     parser.model.add_trigger(tr);
 };   
+
+//------------------------- LTL Definition -------------------------
+
+LtlDefinition: () = "ltl" <i:Identifier> "=" <e:Expr> => {
+    let position = Some(i.position);
+    let x = LtlDefinition::new(i.name, e, position);
+    parser.model.add_ltl_definition(x);
+};
 
 //------------------------- Property -------------------------
 

@@ -19,6 +19,8 @@ pub struct Model {
     transitions: Vec<Transition>,
     triggers: Vec<Trigger>,
     //
+    ltl_definitions: Vec<LtlDefinition>,
+    //
     property: Option<Expr>,
     //
     search: Search,
@@ -39,6 +41,7 @@ impl Model {
             invariants: Vec::new(),
             transitions: Vec::new(),
             triggers: Vec::new(),
+            ltl_definitions: Vec::new(),
             property: None,
             search: Search::new(
                 TransitionNumber::new(0, None),
@@ -207,6 +210,20 @@ impl Model {
         let mut trigger = trigger;
         trigger.set_id(id);
         self.triggers.push(trigger);
+        id
+    }
+
+    //---------- Definition ----------
+
+    pub fn ltl_definitions(&self) -> &Vec<LtlDefinition> {
+        &self.ltl_definitions
+    }
+
+    pub fn add_ltl_definition(&mut self, definition: LtlDefinition) -> LtlDefinitionId {
+        let id = LtlDefinitionId(self.ltl_definitions.len());
+        let mut definition = definition;
+        definition.set_id(id);
+        self.ltl_definitions.push(definition);
         id
     }
 
@@ -433,6 +450,10 @@ impl Model {
         for x in self.fun_defs.iter() {
             entries.push(x.into());
         }
+        // LTL Definitions
+        for x in self.ltl_definitions.iter() {
+            entries.push(x.into());
+        }
         //
         entries
     }
@@ -483,6 +504,13 @@ impl Model {
             triggers.push(y);
         }
         self.triggers = triggers;
+        // LTL Definitions
+        let mut ltl_definitions = Vec::new();
+        for x in self.ltl_definitions.iter() {
+            let y = x.resolve_expr(self, &entries)?;
+            ltl_definitions.push(y);
+        }
+        self.ltl_definitions = ltl_definitions;
         // Property
         if let Some(phi) = &self.property {
             let phi = phi.resolve(self, &entries)?;
@@ -522,6 +550,10 @@ impl Model {
         for x in self.triggers.iter() {
             x.check_type(self)?;
         }
+        // LTL Definitions
+        for x in self.ltl_definitions.iter() {
+            x.check_type(self)?;
+        }
         // Property
         if let Some(phi) = &self.property {
             phi.check_type(self)?;
@@ -557,6 +589,10 @@ impl Model {
         }
         // Trigger
         for x in self.triggers.iter() {
+            x.check_time(self)?;
+        }
+        // LTL Definitions
+        for x in self.ltl_definitions.iter() {
             x.check_time(self)?;
         }
         // Property
@@ -614,6 +650,13 @@ impl Model {
             triggers.push(y);
         }
         self.triggers = triggers;
+        // TLL Definitions
+        let mut ltl_definitions = Vec::new();
+        for x in self.ltl_definitions.iter() {
+            let y = x.propagate_expr(self);
+            ltl_definitions.push(y);
+        }
+        self.ltl_definitions = ltl_definitions;
         // Property
         if let Some(phi) = &self.property {
             let phi = phi.propagate(self);
@@ -813,6 +856,10 @@ impl std::fmt::Display for Model {
         for x in self.triggers.iter() {
             write!(f, "{}\n", x.to_lang(self))?;
         }
+        // ----- LTL Definitions -----
+        for x in self.ltl_definitions.iter() {
+            write!(f, "{}\n", x.to_lang(self))?;
+        }
         // ----- Property -----
         if let Some(phi) = &self.property {
             write!(f, "prop = {}\n", phi.to_lang(self))?;
@@ -907,6 +954,12 @@ impl GetFromId<FunDecId, FunDec> for Model {
 impl GetFromId<FunDefId, FunDef> for Model {
     fn get(&self, id: FunDefId) -> Option<&FunDef> {
         self.fun_defs.get(id.index())
+    }
+}
+
+impl GetFromId<LtlDefinitionId, LtlDefinition> for Model {
+    fn get(&self, id: LtlDefinitionId) -> Option<&LtlDefinition> {
+        self.ltl_definitions.get(id.index())
     }
 }
 

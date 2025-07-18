@@ -32,7 +32,7 @@ pub mod solver;
 pub use solver::*;
 
 #[derive(Clone, Copy, Debug)]
-enum ExecuteRequest {
+pub enum ExecuteRequest {
     Truncated(usize),
     Infinite(usize),
     Finite(usize),

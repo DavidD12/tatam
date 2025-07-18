@@ -34,6 +34,7 @@ impl Expr {
             e @ Expression::Definition(_) => e.clone(),
             e @ Expression::FunDec(_) => e.clone(),
             e @ Expression::FunDef(_) => e.clone(),
+            e @ Expression::LtlDefinition(_) => e.clone(),
             //
             Expression::Apply(fun, params) => {
                 let f = fun.resolve(model, entries)?;

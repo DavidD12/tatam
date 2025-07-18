@@ -101,6 +101,14 @@ impl<'a> Solver<'a> {
         Self::var_dec_name(dec, state)
     }
 
+    pub fn var_def_name(def: &Definition, state: usize) -> String {
+        format!("{}__{}", def.name(), state)
+    }
+
+    pub fn var_ltl_name(ltl: &LtlDefinition, state: usize) -> String {
+        format!("{}__{}", ltl.name(), state)
+    }
+
     pub fn var_fun_name(fun: &FunDec, state: usize) -> String {
         format!("{}__{}", fun.name(), state)
     }
@@ -212,6 +220,29 @@ impl<'a> Solver<'a> {
             if !d.is_constant() {
                 self.declare_dec_var(d, state);
             }
+        }
+    }
+
+    //------------------------- Var Definition -------------------------
+
+    fn declare_def_var(&mut self, def: &Definition, state: usize) {
+        let name = Self::var_def_name(def, state);
+        let typ = def.get_type(self.model);
+        let sort = self.to_sort(&typ);
+        self.smt.declare_const(&name, &sort).unwrap();
+        if let Type::IntInterval(min, max) = typ {
+            self.smt.assert(&format!("(>= {} {})", name, min)).unwrap();
+            self.smt.assert(&format!("(<= {} {})", name, max)).unwrap();
+        }
+        // Definition
+        self.smt
+            .assert(&format!("(= {} {})", name, self.to_smt(&def.expr(), state)))
+            .unwrap();
+    }
+
+    fn declare_def_vars(&mut self, state: usize) {
+        for d in self.model.definitions().iter() {
+            self.declare_def_var(d, state);
         }
     }
 
@@ -790,10 +821,14 @@ impl<'a> Solver<'a> {
                     Self::var_dec_name(dec, state)
                 }
             }
-            Expression::Definition(_) => panic!(),
+            Expression::Definition(id) => Self::var_def_name(self.model.get(*id).unwrap(), state),
             Expression::FunDec(_) => todo!(),
             Expression::FunDef(_) => todo!(),
             Expression::Parameter(_) => todo!(),
+            Expression::LtlDefinition(id) => {
+                Self::var_ltl_name(self.model.get(*id).unwrap(), state)
+            }
+            //
             Expression::Apply(fun, params) => match fun.expression() {
                 Expression::FunDec(id) => {
                     let f = self.model.get(*id).unwrap();
@@ -959,6 +994,7 @@ impl<'a> Solver<'a> {
                 .unwrap();
             // Var
             self.declare_dec_vars(state);
+            self.declare_def_vars(state);
             self.declare_fun_vars(state);
             // LTL Variables
             self.declare_ltl_non_loop_vars(state);

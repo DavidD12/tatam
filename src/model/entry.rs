@@ -11,6 +11,7 @@ pub enum EntryRef {
     Definition(DefinitionId),
     FunDec(FunDecId),
     FunDef(FunDefId),
+    LtlDefinition(LtlDefinitionId),
     //
     Parameter(Parameter),
     //
@@ -114,6 +115,15 @@ impl From<&FunDef> for Entry {
     }
 }
 
+impl From<&LtlDefinition> for Entry {
+    fn from(value: &LtlDefinition) -> Self {
+        Self {
+            name: value.name().into(),
+            reference: EntryRef::LtlDefinition(value.id()),
+        }
+    }
+}
+
 impl From<&Parameter> for Entry {
     fn from(value: &Parameter) -> Self {
         Self {
@@ -133,6 +143,7 @@ impl Into<Expression> for &Entry {
             EntryRef::Definition(id) => Expression::Definition(*id),
             EntryRef::FunDec(id) => Expression::FunDec(*id),
             EntryRef::FunDef(id) => Expression::FunDef(*id),
+            EntryRef::LtlDefinition(id) => Expression::LtlDefinition(*id),
             EntryRef::Parameter(param) => Expression::Parameter(param.clone()),
         }
     }

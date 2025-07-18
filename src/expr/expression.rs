@@ -243,6 +243,7 @@ pub enum Expression {
     Definition(DefinitionId),
     FunDec(FunDecId),
     FunDef(FunDefId),
+    LtlDefinition(LtlDefinitionId),
     //
     Parameter(Parameter),
     //
@@ -300,6 +301,7 @@ impl ToLang for Expression {
             Expression::Definition(id) => model.get(*id).unwrap().name().into(),
             Expression::FunDec(id) => model.get(*id).unwrap().name().into(),
             Expression::FunDef(id) => model.get(*id).unwrap().name().into(),
+            Expression::LtlDefinition(id) => model.get(*id).unwrap().name().into(),
             //
             Expression::Parameter(param) => param.name().into(),
             //
@@ -416,6 +418,7 @@ impl ToDebug for Expression {
             Expression::Definition(id) => model.get(*id).unwrap().name().into(),
             Expression::FunDec(id) => model.get(*id).unwrap().name().into(),
             Expression::FunDef(id) => model.get(*id).unwrap().name().into(),
+            Expression::LtlDefinition(id) => model.get(*id).unwrap().name().into(),
             //
             Expression::Parameter(param) => param.name().into(),
             //
