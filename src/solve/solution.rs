@@ -173,14 +173,41 @@ impl ToLang for Solution {
             res += &format!("objective = {}\n", objective.to_lang(model));
         }
 
+        // First State
+        res += "---------- State 0 ----------\n";
+        // Variables
+        let mut prev_dec = HashMap::new();
+        for (id, v) in self.var_dec.iter() {
+            let dec = model.get(*id).unwrap();
+            if let Some(value) = &v[0] {
+                let line = format!("{} = {}\n", dec.to_lang(model), value.to_lang(model));
+                prev_dec.insert(*id, line.clone());
+                res += &line;
+            }
+        }
+        // Definitions
+        let mut prec_def = HashMap::new();
+        for (id, v) in self.var_def.iter() {
+            let def = model.get(*id).unwrap();
+            if let Some(value) = &v[0] {
+                let line = format!("{} = {}\n", def.to_lang(model), value.to_lang(model));
+                prec_def.insert(*id, line.clone());
+                res += &line;
+            }
+        }
+
         // States
-        for state in 0..self.states {
+        for state in 1..self.states {
             res += &format!("---------- State {} ----------\n", state);
             // Variables
             for (id, v) in self.var_dec.iter() {
                 let dec = model.get(*id).unwrap();
                 if let Some(value) = &v[state] {
-                    res += &format!("{} = {}\n", dec.to_lang(model), value.to_lang(model));
+                    let line = format!("{} = {}\n", dec.to_lang(model), value.to_lang(model));
+                    if prev_dec.get(id) != Some(&line) {
+                        res += &line;
+                        prev_dec.insert(*id, line);
+                    }
                 }
             }
             // Definitions
@@ -189,7 +216,11 @@ impl ToLang for Solution {
                 let def = model.get(*id).unwrap();
                 println!("def: {:?}", def);
                 if let Some(value) = &v[state] {
-                    res += &format!("{} = {}\n", def.to_lang(model), value.to_lang(model));
+                    let line = format!("{} = {}\n", def.to_lang(model), value.to_lang(model));
+                    if prec_def.get(id) != Some(&line) {
+                        res += &line;
+                        prec_def.insert(*id, line);
+                    }
                 }
             }
         }
