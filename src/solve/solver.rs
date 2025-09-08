@@ -1438,7 +1438,9 @@ impl<'a> Solver<'a> {
                     let e = Expr::new(expression, None);
                     return Some(e);
                 }
-                crate::typing::typ::Type::IntInterval(_, _) => eval.parse::<i64>().unwrap().into(),
+                crate::typing::typ::Type::IntInterval(_, _) => {
+                    eval.replace(&[' '], "").parse::<i64>().unwrap().into()
+                }
                 //
                 crate::typing::typ::Type::Undefined => panic!(),
                 crate::typing::typ::Type::Unresolved(_, _) => panic!(),
