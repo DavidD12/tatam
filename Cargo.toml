@@ -21,8 +21,9 @@ lalrpop-util = { version = "0.19.8", features = ["lexer"] }
 regex = "1.6.0"
 line-col = "0.2.1"
 # z3 = "0.11.2"
+clap = { version = "4.0.18", features = ["derive"] }
+fraction = "0.13.0"
 d-stu = "0.1.6"
-# d-stu = { path = "../d-stu" }
 termion = "2.0.1"
 smt_sb-rs = "0.1.0"
 threadpool = "1.8.1"
@@ -47,5 +48,3 @@ path = "bin/main.rs"
 # [[bin]]
 # name = "smt_test"
 # path = "bin/smt_test.rs"
-clap = { version = "4.0.18", features = ["derive"] }
-fraction = "0.13.0"
